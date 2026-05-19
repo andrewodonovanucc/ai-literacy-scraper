@@ -1,4 +1,4 @@
-# ai-literacy-scraper
+# AI LITERACY SCRAPER
 
 A Python tool for scraping and analysing academic job postings on [jobs.ac.uk](https://www.jobs.ac.uk) to investigate the prevalence of AI literacy requirements in higher education roles. Built as part of a PhD research project examining how institutions are responding to generative AI.
 
@@ -6,14 +6,11 @@ A Python tool for scraping and analysing academic job postings on [jobs.ac.uk](h
 
 The tool runs as a pipeline with four stages, each of which can be executed independently or all together:
 
-1. **Scrape** — Searches jobs.ac.uk for academic roles (Lecturer, Professor, Instructional Designer, etc.) and collects job listings across all result pages. Deduplicates by URL and saves to JSON.
-2. **Job Details** — Fetches the full text of each job posting by following the individual listing URLs.
-3. **Filter** — Scans job descriptions for AI-related terminology (e.g. `ai literacy`, `large language model`, `generative ai`, `chatgpt`) to identify postings that reference AI.
-4. **Analyse** — Runs analysis across the filtered dataset to surface patterns and findings.
+1. **Scrape** - Searches jobs.ac.uk for academic roles (Lecturer, Professor, Instructional Designer, etc.) and collects job listings across all result pages. Deduplicates by URL and saves to JSON.
+2. **Job Details** - Fetches the full text of each job posting by following the individual listing URLs.
+3. **Filter** - Scans job descriptions for AI-related terminology (e.g. `ai literacy`, `large language model`, `generative ai`, `chatgpt`) to identify postings that reference AI.
+4. **Analyse** - Runs analysis across the filtered dataset to surface patterns and findings.
 
-## Research context
-
-This tool supports a PhD investigation into demand for AI literacy skills within academic hiring. The core research question is whether — and how — higher education institutions are explicitly expecting staff to engage with AI in their roles. The source of truth is jobs.ac.uk, a UK-based academic jobs board with broad coverage across HEIs.
 
 ## Setup
 
@@ -42,7 +39,8 @@ You'll be prompted with a menu:
 6. Exit
 ```
 
-Select `5` to run the full pipeline end-to-end, or run individual stages as needed. Combo options `12` (scrape + details + filter) and `123` (scrape + details + filter, no analysis) are also supported.
+Select `5` to run the full pipeline end-to-end, or run individual stages as needed. 
+*Combo options `12` (scrape and details) and `123` (scrape + details + filter, no analysis) are also supported.*
 
 ## Configuration
 
@@ -79,6 +77,12 @@ Modify `SEARCH_TERMS` or `AI_TERMS` to adjust the scope of the scrape or the fil
 
 ```
 ai-literacy-scraper/
+├── data
+├──     criteria/     # Storage for scraped jobs in a timestamped JSON format - criteria added.
+├──     filters/      # Storage for scraped jobs in a timestamped JSON format - AI Matches count added.
+├──     jd/           # Storage for scraped job descriptions in a timestamped JSON format
+├──     jobs/         # Storage for scraped jobs in a timestamped JSON format
+├──     runs/         # Storage for the output of each individual run in a timestamped JSON format
 ├── main.py           # Entry point and menu
 ├── scraper.py        # Fetches job listings from jobs.ac.uk
 ├── job_details.py    # Fetches full text of each job posting
@@ -103,5 +107,5 @@ Key packages: `beautifulsoup4`, `requests`, `rich`, `pandas`, `matplotlib`, `lxm
 
 ## Author
 
-Andrew O'Donovan — PhD Researcher & Assistant Lecturer, University College Cork  
+Andrew O'Donovan — PhD Researcher, University College Cork  
 [github.com/andrewodonovanucc](https://github.com/andrewodonovanucc)

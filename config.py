@@ -1,15 +1,43 @@
-SEARCH_TERMS = [   
-    "AI",
-    "AI literacy",
-    "artificial intelligence",
-    "artificial intelligence literacy",
-    "generative AI",
-    "AI fluency",
-    "prompt engineering",
-    "AI competency",
-    "AI skills",
-    "responsible AI",
-    "AI in education",
-    ]
+SEARCH_TERMS = [
+    "Lecturer",
+    "Professor",
+    "Instructional Designer",
+    "Educational Developer",
+    "Academic Developer",
+    "Faculty Position",
+    # "Researcher",
+]
 
-REQUEST_DELAY = 2
+AI_TERMS = [
+    "artificial intelligence",
+    "ai",
+    "machine learning",
+    "deep learning",
+    "neural network",
+    "generative ai",
+    "gen ai",
+    "genai",
+    "large language model",
+    "llm",
+    "foundation model",
+    "chatgpt",
+    "gpt-4",
+    "gpt4",
+    "openai",
+    "gpt-5",
+    "claude",
+    "anthropic",
+    "gemini",
+    "copilot",
+    "llama",
+    "ai literacy",
+    "ai tool",
+    "ai-powered",
+    "ai-enabled",
+    "ai in education",
+    "ai in teaching",
+    "ai in learning",
+    "ai policy",
+]
+
+REQUEST_DELAY = 1

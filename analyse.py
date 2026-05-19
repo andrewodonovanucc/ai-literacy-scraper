@@ -23,5 +23,3 @@ def init():
         if job['ai_matches'] > 2:
             print(f"{job['ai_matches']:>3} matches | {job['title']}")
 
-
-init()

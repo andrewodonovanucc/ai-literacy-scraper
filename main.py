@@ -1,8 +1,8 @@
 import logging
 import scraper
 import job_details
-import job_criteria
 import ai_filter
+import analyse
 import log_setup
 
 
@@ -11,9 +11,9 @@ def menu():
     logging.info("  SELECT AN OPTION:   ")
     logging.info("=" * 100)
     logging.info("  1. Run Scraper")
-    logging.info("  2. Get Job Descriptions")
-    logging.info("  3. Get Job Criteria")
-    logging.info("  4. Filter")
+    logging.info("  2. Get Job Details")
+    logging.info("  3. Filter")
+    logging.info("  4. Analyse")
     logging.info("  5. All")
     logging.info("  6. Exit")
     logging.info("=" * 100)
@@ -29,22 +29,23 @@ def handle_opts(opt):
 
     logging.info("SELECTED OPTION: " + opt)
     if opt == "1":
-        logging.info("Chose Run Scraper")
+        logging.info("Chose to run Scraper")
         scraper.init()
     elif opt == "2":
-        logging.info("Chose Get Job Descriptions")
+        logging.info("Chose to get Job Details")
         job_details.init()
     elif opt == "3":
-        logging.info("Chose Get Job Criteria")
-        job_criteria.init()
-    elif opt == "4":
         logging.info("Chose Filter")
         ai_filter.init()
+    elif opt == "4":
+        logging.info("Chose to perform Analysis")
+        analyse.init()
     elif opt == "5":
-        logging.info("Chose All")
+        logging.info("Chose to perform All")
         scraper.init()
         job_details.init()
         ai_filter.init()
+        analyse.init()
     elif opt == "6":
         logging.info("BYE!")
         exit()

@@ -7,10 +7,12 @@ __pycache__/
 *.pyo
 
 # Scraped data
-data/reports/cache/
-data/jobs_raw.csv
-data/jobs_filtered.csv
-data/sentiment_results.csv
+data/filters/
+data/jd/
+data/jobs/
+data/runs/
+
+METHODOLOGY.md
 
 # Keep these — research audit trail
 # data/scrape_log.csv

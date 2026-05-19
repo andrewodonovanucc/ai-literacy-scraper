@@ -40,6 +40,7 @@ You'll be prompted with a menu:
 ```
 
 Select `5` to run the full pipeline end-to-end, or run individual stages as needed. 
+
 *Combo options `12` (scrape and details) and `123` (scrape + details + filter, no analysis) are also supported.*
 
 ## Configuration

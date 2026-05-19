@@ -105,6 +105,7 @@ def fetch_all_pages():
             time.sleep(REQUEST_DELAY)
 
             soup = bs(r.text, "html.parser")
+
             total = get_total_results(soup)
             logging.info("Total results for '" + term + "': " + str(total))
 

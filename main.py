@@ -23,25 +23,25 @@ def menu():
 
 
 def handle_opts(opt):
-    while opt not in ("1", "2", "3", "4", "5", "6"):
+    while opt not in ("1", "2", "3", "4", "5", "6", "12", "123"):
         logging.info("PLEASE SELECT A VALID OPTION")
         opt = menu()
 
     logging.info("SELECTED OPTION: " + opt)
     if opt == "1":
-        logging.info("Chose to run Scraper")
+        logging.info("Chose to run Scraper.")
         scraper.init()
     elif opt == "2":
-        logging.info("Chose to get Job Details")
+        logging.info("Chose to get Job Details.")
         job_details.init()
     elif opt == "3":
-        logging.info("Chose Filter")
+        logging.info("Chose Filter.")
         ai_filter.init()
     elif opt == "4":
-        logging.info("Chose to perform Analysis")
+        logging.info("Chose to perform Analysis.")
         analyse.init()
     elif opt == "5":
-        logging.info("Chose to perform All")
+        logging.info("Chose to perform All.")
         scraper.init()
         job_details.init()
         ai_filter.init()
@@ -49,6 +49,17 @@ def handle_opts(opt):
     elif opt == "6":
         logging.info("BYE!")
         exit()
+    elif opt == "12":
+        logging.info("Chose to perform Scrape and get Job Details.")
+        scraper.init()
+        job_details.init()
+        ai_filter.init()
+    elif opt == "123":
+        logging.info("Chose to perform Scrape, get Job Details and FIlter.")
+        scraper.init()
+        job_details.init()
+        ai_filter.init()
+        
 
 
 def main():

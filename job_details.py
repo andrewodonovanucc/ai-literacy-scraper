@@ -28,7 +28,10 @@ JOB_DESCRIPTIONS_DIV = []
 JOB_DESCRIPTIONS_TEXT = []
 
 JOB_CRITERIA_DIV = []
-JOB_CRITERIA_TEXT = []
+
+JOB_SALARY = []
+JOB_HOURS = []
+JOB_CONTRACT = []
 
 
 
@@ -48,9 +51,8 @@ def read_json_to_dict(file):
 
 
 # =================================================================================
-# DO THE SCRAPING - PULL JOB DESCRIPTIONS
+# DO THE SCRAPING - PULL JOB DESCRIPTIONS AND CRITERIA
 # =================================================================================
-
 
 def get_job_details():
     logging.info("=" * 100)
@@ -91,36 +93,100 @@ def get_job_details():
             )
             
             if job_criteria_div:
-                job_criteria_text = job_criteria_div.get_text(separator=" ", strip=True)
-                JOB_CRITERIA_TEXT.append(job_criteria_text)
+                JOB_CRITERIA_DIV.append(job_criteria_div)
             elif alt_job_criteria_div:
-                job_criteria_alt_text = alt_job_criteria_div.get_text(separator=" ", strip=True)
-                JOB_CRITERIA_TEXT.append(job_criteria_alt_text)
+                JOB_CRITERIA_DIV.append(alt_job_criteria_div)
             else:
-                JOB_CRITERIA_TEXT.append("N/A")
+                JOB_CRITERIA_DIV.append("N/A")
                 logging.info(f"JOB CRITERIA NOT FOUND FOR URL {i + 1}: " + str(url))
 
             progress.update(task, advance=1)
             r.close()
             # time.sleep(config.REQUEST_DELAY)
 
+    extract_criteria_fields()
+    export_job_descriptions()
+    export_criteria()
 
-# =======================================================================================
-#   SCRAPE FOR JOB DETAILS - SALARY, HOURS ETC.
-# =======================================================================================
+# =================================================================================
+# EXPORT THE JOB DESCRIPTIONS TO JSON IN JD FOLDER.
+# =================================================================================
 
+def export_job_descriptions():
+    logging.info("EXPORTING JOB DESCRIPTIONS...")
+    logging.info("=" * 100)
+    output = [{"paragraph": text if text else "NA"} for text in JOB_DESCRIPTIONS_TEXT]
+    fh.write_file("jd", output)
+    logging.info(f"Saved {len(output)} Job Descriptions.")
+
+# =================================================================================
+# EXTRACT THE JOB CRITERIA FIELDS FROM THE HTML TABLE STRUCTURE
+# =================================================================================
+
+def extract_criteria_fields():
+    logging.info("EXTRACTING CRITERIA FIELDS...")
+    for i, div in enumerate(JOB_CRITERIA_DIV):
+        salary = "N/A"
+        hours = "N/A"
+        contract = "N/A"
+
+        if div == "N/A":
+            JOB_SALARY.append(salary)
+            JOB_HOURS.append(hours)
+            JOB_CONTRACT.append(contract)
+            continue
+
+        for row in div.find_all("tr"):
+            th = row.find("th")
+            td = row.find("td")
+            if not th or not td:
+                continue
+            header = th.get_text(strip=True)
+            value = td.get_text(separator=" ", strip=True)
+            if header == "Salary:":
+                salary = value
+            elif header == "Hours:":
+                hours = value
+            elif header == "Contract Type:":
+                contract = value
+
+        JOB_SALARY.append(salary)
+        JOB_HOURS.append(hours)
+        JOB_CONTRACT.append(contract)
+
+    logging.info(f"Extracted criteria for {len(JOB_CRITERIA_DIV)} jobs.")
+
+# =================================================================================
+# EXPORT THE JOB DESCRIPTIONS TO JSON IN CRITERIA FOLDER.
+# =================================================================================
+
+def export_criteria():
+    logging.info("=" * 100)
+    logging.info("EXPORTING CRITERIA...")
+
+    # OPEN JOBS FILE
+    with open(INPUT_FILE, encoding="utf-8") as f:
+        jobs = json.load(f)
+
+    
+    for i, job in enumerate(jobs):
+        job["job_description"] = JOB_DESCRIPTIONS_TEXT[i] if i < len(JOB_DESCRIPTIONS_TEXT) else "N/A"
+        job["salary"] = JOB_SALARY[i] if i < len(JOB_SALARY) else "N/A"
+        job["hours"] = JOB_HOURS[i] if i < len(JOB_HOURS) else "N/A"
+        job["contract_type"] = JOB_CONTRACT[i] if i < len(JOB_CONTRACT) else "N/A"
+
+    fh.write_file("criteria", jobs)
+    logging.info("=" * 100)
+    logging.info(f"Saved {len(jobs)} criteria.")
+    logging.info("=" * 100)
 
 # ======================================================================================
 # RUN EVERYTHING
 # ======================================================================================
 
-
 def init():
+    global INPUT_FILE
     INPUT_FILE = fh.get_most_recent_item("jobs")
     read_json_to_dict(INPUT_FILE)
     get_job_details()
-    for t in JOB_CRITERIA_TEXT:
-        logging.info(t)
-    output = [{"paragraph": text if text else "NA"} for text in JOB_DESCRIPTIONS_TEXT]
-    fh.write_file("jd", output)
-    logging.info(f"Saved {len(output)} job descriptions")
+    

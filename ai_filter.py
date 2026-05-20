@@ -83,7 +83,7 @@ def export_with_ai_matches():
     logging.info("=" * 100)
     logging.info("EXPORT...")
     file = fh.get_most_recent_item("jobs")
-    filepath = os.path.join("data", "jobs", file)
+    filepath = os.path.join("data", "criteria", file)
 
     with open(filepath, encoding="utf-8") as f:
         jobs = json.load(f)

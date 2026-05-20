@@ -40,15 +40,25 @@ JOB_CONTRACT = []
 # =================================================================================
 
 
-def read_json_to_dict(file):
+def read_json_to_dict():
     logging.info("READING JSON FILE TO DICTIONARY...")
-    INPUT_PATH = os.path.join("data", "jobs", file)
-    with open(INPUT_PATH, encoding="utf-8") as json_file:
-        data = json.load(json_file)
+    jobs = get_jobs_from_file()
 
-    for item in data:
+    for item in jobs:
         JOB_POSTING_URLS.append(item["url"])
 
+
+# =================================================================================
+# READ THE JOBS FROM THE JSON FILE IN THE JOBS FOLDER
+# =================================================================================
+
+
+def get_jobs_from_file():
+    global INPUT_FILE, INPUT_PATH
+    INPUT_PATH = os.path.join("data", "jobs", INPUT_FILE)
+    with open(INPUT_PATH, encoding="utf-8") as json_file:
+        jobs = json.load(json_file)
+    return jobs
 
 # =================================================================================
 # DO THE SCRAPING - PULL JOB DESCRIPTIONS AND CRITERIA
@@ -109,17 +119,6 @@ def get_job_details():
     export_criteria()
 
 # =================================================================================
-# EXPORT THE JOB DESCRIPTIONS TO JSON IN JD FOLDER.
-# =================================================================================
-
-def export_job_descriptions():
-    logging.info("EXPORTING JOB DESCRIPTIONS...")
-    logging.info("=" * 100)
-    output = [{"paragraph": text if text else "NA"} for text in JOB_DESCRIPTIONS_TEXT]
-    fh.write_file("jd", output)
-    logging.info(f"Saved {len(output)} Job Descriptions.")
-
-# =================================================================================
 # EXTRACT THE JOB CRITERIA FIELDS FROM THE HTML TABLE STRUCTURE
 # =================================================================================
 
@@ -157,27 +156,45 @@ def extract_criteria_fields():
     logging.info(f"Extracted criteria for {len(JOB_CRITERIA_DIV)} jobs.")
 
 # =================================================================================
-# EXPORT THE JOB DESCRIPTIONS TO JSON IN CRITERIA FOLDER.
+# EXPORT THE JOB DESCRIPTIONS TO JSON IN JD FOLDER.
+# =================================================================================
+
+def export_job_descriptions():
+    global INPUT_PATH, INPUT_FILE
+    logging.info("EXPORTING JOB DESCRIPTIONS...")
+    logging.info("=" * 100)
+    # output = [{"paragraph": text if text else "NA"} for text in JOB_DESCRIPTIONS_TEXT]
+    # fh.write_file("jd", output)
+
+    jobs = get_jobs_from_file()
+    
+    for i, job in enumerate(jobs):
+        job["jd_text"] = JOB_DESCRIPTIONS_TEXT[i] if i < len(JOB_DESCRIPTIONS_TEXT) else "N/A"
+    
+    
+    fh.write_file("jd", jobs)
+    logging.info("=" * 100)
+    logging.info(f"Saved {len(jobs)} Job Descriptions.")
+    logging.info("=" * 100)
+
+# =================================================================================
+# EXPORT THE JOB DETAILS TO JSON IN CRITERIA FOLDER.
 # =================================================================================
 
 def export_criteria():
     logging.info("=" * 100)
     logging.info("EXPORTING CRITERIA...")
 
-    # OPEN JOBS FILE
-    with open(INPUT_FILE, encoding="utf-8") as f:
-        jobs = json.load(f)
-
+    jobs = get_jobs_from_file()
     
     for i, job in enumerate(jobs):
-        job["job_description"] = JOB_DESCRIPTIONS_TEXT[i] if i < len(JOB_DESCRIPTIONS_TEXT) else "N/A"
         job["salary"] = JOB_SALARY[i] if i < len(JOB_SALARY) else "N/A"
         job["hours"] = JOB_HOURS[i] if i < len(JOB_HOURS) else "N/A"
         job["contract_type"] = JOB_CONTRACT[i] if i < len(JOB_CONTRACT) else "N/A"
 
     fh.write_file("criteria", jobs)
     logging.info("=" * 100)
-    logging.info(f"Saved {len(jobs)} criteria.")
+    logging.info(f"Saved {len(jobs)} Criteria.")
     logging.info("=" * 100)
 
 # ======================================================================================
@@ -185,8 +202,9 @@ def export_criteria():
 # ======================================================================================
 
 def init():
-    global INPUT_FILE
+    global INPUT_FILE, INPUT_PATH
     INPUT_FILE = fh.get_most_recent_item("jobs")
-    read_json_to_dict(INPUT_FILE)
+    INPUT_PATH = os.path.dirname(INPUT_FILE)
+    read_json_to_dict()
     get_job_details()
     

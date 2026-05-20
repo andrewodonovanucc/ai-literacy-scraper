@@ -53,7 +53,7 @@ def handle_opts(opt):
         logging.info("Chose to perform Scrape and get Job Details.")
         scraper.init()
         job_details.init()
-        ai_filter.init()
+
     elif opt == "123":
         logging.info("Chose to perform Scrape, get Job Details and FIlter.")
         scraper.init()

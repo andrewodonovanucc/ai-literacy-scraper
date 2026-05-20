@@ -185,7 +185,10 @@ def export_criteria():
     logging.info("=" * 100)
     logging.info("EXPORTING CRITERIA...")
 
-    jobs = get_jobs_from_file()
+    file = fh.get_most_recent_item("jd")
+    filepath = os.path.join("data", "jd", file)
+    with open(filepath, encoding="utf-8") as json_file:
+        jobs = json.load(json_file)
     
     for i, job in enumerate(jobs):
         job["salary"] = JOB_SALARY[i] if i < len(JOB_SALARY) else "N/A"

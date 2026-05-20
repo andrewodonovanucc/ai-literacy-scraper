@@ -13,6 +13,7 @@ AI_PATTERNS = []
 MATCHED = []
 UNMATCHED = []
 AI_MATCHES = {}
+SENTENCES_WITH_AI = []
 
 # =================================================================================
 #   READ JOB DESCRIPTIONS
@@ -26,11 +27,11 @@ def read_job_descs():
         data = json.load(f)
 
     for jd in data:
-        jd_lower = str(jd["paragraph"])
+        jd_lower = str(jd["jd_text"])
         jd_lower = jd_lower.lower()
 
         JOB_DESCRIPTIONS_LOWER.append(jd_lower)
-        JOB_DESCRIPTIONS.append(jd["paragraph"])
+        JOB_DESCRIPTIONS.append(jd["jd_text"])
 
 
 # =================================================================================
@@ -82,7 +83,7 @@ def export_with_ai_matches():
     logging.info("UNMATCHED: " + str(len(UNMATCHED)))
     logging.info("=" * 100)
     logging.info("EXPORT...")
-    file = fh.get_most_recent_item("jobs")
+    file = fh.get_most_recent_item("criteria")
     filepath = os.path.join("data", "criteria", file)
 
     with open(filepath, encoding="utf-8") as f:
@@ -91,6 +92,7 @@ def export_with_ai_matches():
     for i, job in enumerate(jobs):
         match_data = AI_MATCHES.get(i)
         job["ai_matches"] = len(match_data["matches"]) if match_data else 0
+        job["ai_sentences"] = [match["sentence"] for match in match_data["matches"]] if match_data else []
 
     fh.write_file("filters", jobs)
     logging.info(f"Exported to filters")

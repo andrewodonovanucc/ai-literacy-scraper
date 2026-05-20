@@ -47,6 +47,7 @@ def handle_opts(opt):
         job_details.init()
         ai_filter.init()
         analyse.init()
+        fh.archive_old_files()
     elif opt == "6":
         logging.info("Chose to archive old files.")
         fh.archive_old_files()

@@ -130,4 +130,5 @@ Key packages: `beautifulsoup4`, `requests`, `rich`, `pandas`, `matplotlib`, `lxm
 
 Andrew O'Donovan — PhD Researcher, University College Cork  
 [github.com/andrewodonovanucc](https://github.com/andrewodonovanucc)
+
 [Linkedin](https://ie.linkedin.com/in/andrew-o-donovan)

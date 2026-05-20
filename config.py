@@ -5,7 +5,7 @@ SEARCH_TERMS = [
     "Educational Developer",
     "Academic Developer",
     "Faculty Position",
-    # "Researcher",
+    "Researcher",
 ]
 
 AI_TERMS = [

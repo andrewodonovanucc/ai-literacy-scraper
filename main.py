@@ -4,7 +4,7 @@ import job_details
 import ai_filter
 import analyse
 import log_setup
-
+import file_handling as fh
 
 def menu():
     logging.info("=" * 100)
@@ -15,7 +15,8 @@ def menu():
     logging.info("  3. Filter")
     logging.info("  4. Analyse")
     logging.info("  5. All")
-    logging.info("  6. Exit")
+    logging.info("  6. Archive old files")
+    logging.info("  7. Exit")
     logging.info("=" * 100)
     chosen_opt = input("Input Choice: ")
     logging.info("=" * 100)
@@ -23,7 +24,7 @@ def menu():
 
 
 def handle_opts(opt):
-    while opt not in ("1", "2", "3", "4", "5", "6", "12", "123"):
+    while opt not in ("1", "2", "3", "4", "5", "6", "7", "12", "123", "612", "6123"):
         logging.info("PLEASE SELECT A VALID OPTION")
         opt = menu()
 
@@ -47,18 +48,31 @@ def handle_opts(opt):
         ai_filter.init()
         analyse.init()
     elif opt == "6":
+        logging.info("Chose to archive old files.")
+        fh.archive_old_files()
+    elif opt == "7":
         logging.info("BYE!")
         exit()
     elif opt == "12":
         logging.info("Chose to perform Scrape and get Job Details.")
         scraper.init()
         job_details.init()
-
     elif opt == "123":
         logging.info("Chose to perform Scrape, get Job Details and FIlter.")
         scraper.init()
         job_details.init()
         ai_filter.init()
+    elif opt == "612":
+        logging.info("Chose to archive old files, perform Scrape and get Job Details.")
+        scraper.init()
+        job_details.init()
+        fh.archive_old_files()
+    elif opt == "6123":
+        logging.info("Chose to archive old files, perform Scrape, get Job Details and Filter.")
+        scraper.init()
+        job_details.init()
+        ai_filter.init()
+        fh.archive_old_files()
         
 
 

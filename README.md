@@ -1,4 +1,4 @@
-# AI LITERACY SCRAPER
+# AI Literacy Scraper
 
 A Python tool for scraping and analysing academic job postings on [jobs.ac.uk](https://www.jobs.ac.uk) to investigate the prevalence of AI literacy requirements in higher education roles. Built as part of a PhD research project examining how institutions are responding to generative AI.
 
@@ -6,10 +6,12 @@ A Python tool for scraping and analysing academic job postings on [jobs.ac.uk](h
 
 The tool runs as a pipeline with four stages, each of which can be executed independently or all together:
 
-1. **Scrape** - Searches jobs.ac.uk for academic roles (Lecturer, Professor, Instructional Designer, etc.) and collects job listings across all result pages. Deduplicates by URL and saves to JSON.
-2. **Job Details** - Fetches the full text of each job posting by following the individual listing URLs.
-3. **Filter** - Scans job descriptions for AI-related terminology (e.g. `ai literacy`, `large language model`, `generative ai`, `chatgpt`) to identify postings that reference AI.
-4. **Analyse** - Runs analysis across the filtered dataset to surface patterns and findings.
+| Option | Stages run |
+|--------|-----------|
+| 1.**Scrape**  | Searches jobs.ac.uk for academic roles (Lecturer, Professor, Instructional Designer, etc.) and collects job listings across all result pages. Deduplicates by URL and saves to JSON. |
+| 2. **Job Details**  | Fetches the full text and structured criteria (salary, hours, contract type) for each job posting by following the individual listing URLs. |
+| 3. **Filter**  | Scans job descriptions for AI-related terminology (e.g. `ai literacy`, `large language model`, `generative ai`, `chatgpt`) using regex matching, and records the matching sentences per job. |
+| 4. **Analyse** | Sorts the filtered dataset by AI match count and prints jobs with more than 2 matches. |
 
 
 ## Setup
@@ -36,12 +38,20 @@ You'll be prompted with a menu:
 3. Filter
 4. Analyse
 5. All
-6. Exit
+6. Archive old files
+7. Exit
 ```
 
-Select `5` to run the full pipeline end-to-end, or run individual stages as needed. 
+Select `5` to run the full pipeline end-to-end, or run individual stages as needed.
 
-*Combo options `12` (scrape and details) and `123` (scrape + details + filter, no analysis) are also supported.*
+Combo options are also supported:
+
+| Option | Stages run |
+|--------|-----------|
+| `12`   | Scrape + Job Details |
+| `123`  | Scrape + Job Details + Filter |
+| `612`  | Archive + Scrape + Job Details |
+| `6123` | Archive + Scrape + Job Details + Filter |
 
 ## Configuration
 
@@ -78,28 +88,38 @@ Modify `SEARCH_TERMS` or `AI_TERMS` to adjust the scope of the scrape or the fil
 
 ```
 ai-literacy-scraper/
-├── data
-├──     criteria/     # Storage for scraped jobs in a timestamped JSON format - criteria added.
-├──     filters/      # Storage for scraped jobs in a timestamped JSON format - AI Matches count added.
-├──     jd/           # Storage for scraped job descriptions in a timestamped JSON format
-├──     jobs/         # Storage for scraped jobs in a timestamped JSON format
-├──     runs/         # Storage for the output of each individual run in a timestamped JSON format
-├── main.py           # Entry point and menu
-├── scraper.py        # Fetches job listings from jobs.ac.uk
-├── job_details.py    # Fetches full text of each job posting
-├── ai_filter.py      # Filters postings by AI terminology
-├── analyse.py        # Analysis and reporting
-├── config.py         # Search terms, AI terms, request config
-├── file_handling.py  # JSON read/write helpers
-├── log_setup.py      # Logging configuration
+├── data/
+│   ├── criteria/   # Jobs with salary, hours, and contract type added (timestamped JSON)
+│   ├── filters/    # Jobs with AI match count and matched sentences added (timestamped JSON)
+│   ├── jd/         # Jobs with full job description text added (timestamped JSON)
+│   ├── jobs/       # Raw deduplicated job listings from the scraper (timestamped JSON)
+│   └── runs/       # Log file for each run (timestamped .log)
+├── main.py          # Entry point and menu
+├── scraper.py       # Fetches job listings from jobs.ac.uk
+├── job_details.py   # Fetches full job text and structured criteria per listing
+├── ai_filter.py     # Filters postings by AI terminology using regex
+├── analyse.py       # Sorts and prints jobs by AI match count
+├── config.py        # Search terms, AI terms, request config
+├── file_handling.py # JSON read/write helpers and file archiving
+├── log_setup.py     # Logging configuration
 └── requirements.txt
 ```
+
+## Data pipeline
+
+Each stage reads from the most recent file in the relevant input folder and writes a new timestamped file to its output folder. The full chain is:
+
+```
+jobs/ → jd/ → criteria/ → filters/
+```
+
+The `archive_old_files()` function (option 6) moves all but the most recent file in each folder to `../ai-literacy-scraper-data-backup/`.
 
 ## Notes
 
 - The scraper includes a configurable delay between requests (`REQUEST_DELAY` in `config.py`) to avoid hammering the server.
-- Progress is shown via `rich` progress bars during scraping.
-- All output is logged and written to JSON files for downstream analysis.
+- Progress is shown via `rich` progress bars during scraping and filtering.
+- All output is logged to `data/runs/` and written to JSON files for downstream analysis.
 - This tool is intended for academic research purposes only. Please respect jobs.ac.uk's terms of service.
 
 ## Dependencies
@@ -110,3 +130,4 @@ Key packages: `beautifulsoup4`, `requests`, `rich`, `pandas`, `matplotlib`, `lxm
 
 Andrew O'Donovan — PhD Researcher, University College Cork  
 [github.com/andrewodonovanucc](https://github.com/andrewodonovanucc)
+[Linkedin](https://ie.linkedin.com/in/andrew-o-donovan)

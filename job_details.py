@@ -143,6 +143,7 @@ def extract_criteria_fields():
             header = th.get_text(strip=True)
             value = td.get_text(separator=" ", strip=True)
             if header == "Salary:":
+                value = ' '.join(td.get_text(separator=" ", strip=True).split())
                 salary = value
             elif header == "Hours:":
                 hours = value

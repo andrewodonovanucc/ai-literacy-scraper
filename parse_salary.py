@@ -43,6 +43,9 @@ def parse_salary_bounds(salary_str):
         return None, None
 
     first_currency = amounts[0][1]
+    # logging.info("=" * 100)
+    # logging.info("GETTING UP TO DATE CURRENCY RATES...")
+    ps.get_updated_currency_rates()
     rate = RATES_TO_EUR.get(first_currency, 1.0)
 
     same_currency = [v for v, c in amounts if c == first_currency]

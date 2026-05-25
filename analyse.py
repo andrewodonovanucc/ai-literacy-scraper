@@ -1,22 +1,53 @@
+from altair.datasets import data
+
 import file_handling as fh
 import os
+import json
 import logging
 import pandas as pd 
 
 INPUT_FILE = None
 INPUT_PATH = None
 
-JOBS = []
+JOBS_FROM_JSON = []
 
 # =================================================================================
-# LOAD THE LIST OF URLS TO BE SCRAPED
+# LOAD THE JOBS FROM THE MOST RECENT CRITERIA FILE
 # =================================================================================
 
+def get_jobs_from_file():
+    global JOBS_FROM_JSON
+    INPUT_FILE = fh.get_most_recent_item("criteria")
+    INPUT_PATH = os.path.join("data", "criteria", INPUT_FILE)
+    with open(INPUT_PATH, encoding="utf-8") as json_file:
+        JOBS_FROM_JSON = json.load(json_file)
+    update_jobs_with_links()
+
+ # =================================================================================
+# UPDATE THE JOBS WITH LINK MARKDOWN FOR STREAMLIT
+# =================================================================================  
+
+def update_jobs_with_links():
+    global JOBS_FROM_JSON
+    for job in JOBS_FROM_JSON:
+        print(job["url"])
+        job["url"] = "[LINK](" + job["url"] + ")"
+        print(job["url"])
+
+    fh.write_file("analyse", JOBS_FROM_JSON)
+
+
+# =================================================================================
+# LOAD THE UPDATED JOBS FROM JSON TO PANDAS
+# =================================================================================
 
 def read_json_to_pandas():
-    global INPUT_FILE, INPUT_PATH
+    get_jobs_from_file()
+    INPUT_FILE = fh.get_most_recent_item("analyse")
+    INPUT_PATH = os.path.join("data", "analyse", INPUT_FILE)
     logging.info("READING JSON FILE TO DATAFRAME...")
     jobs = pd.read_json(INPUT_PATH)
+    jobs.drop(columns=["salary_text", "jd_text"], inplace=True)
     return jobs
 
 
@@ -26,13 +57,8 @@ def read_json_to_pandas():
 # def sort_by_salary(data, descending=True):
 #     return sorted(data, key=lambda job: (job["salary_lower"] if job["salary_lower"] is not None else float('-inf')), reverse=descending)
 
-
-
 def init():
-    global INPUT_FILE, INPUT_PATH
-    INPUT_FILE = fh.get_most_recent_item("criteria")
-    INPUT_PATH = os.path.join("data", "criteria", INPUT_FILE)
-
+    read_json_to_pandas()
 
     # read_ai_jobs()
     # sorted_jobs = sort_by_ai_matches(JOBS)

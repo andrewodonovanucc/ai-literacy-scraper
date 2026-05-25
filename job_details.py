@@ -5,6 +5,9 @@
 import file_handling as fh
 import config
 import json
+import datetime as dt
+import time
+import re
 import requests
 from rich.progress import Progress
 from bs4 import BeautifulSoup as bs
@@ -38,6 +41,7 @@ JOB_DATE_POSTED = []
 JOB_DATE_CLOSES = []
 
 JOB_IS_PHD = []
+JOB_IS_CLOSED = []
 
 
 # =================================================================================
@@ -159,9 +163,11 @@ def extract_criteria_fields():
             elif header == "Contract Type:":
                 contract = value
             elif header == "Placed On:":
+                value = parse_date(value)
                 date_posted = value
             elif header == "Closes:" or header == "Expires:":
-                date_closes = value
+                value = parse_date(value)
+                date_closes = str(value)
 
         JOB_SALARY_STRING.append(raw_salary)
         JOB_SALARY_LOWER.append(salary_lower)
@@ -170,8 +176,19 @@ def extract_criteria_fields():
         JOB_CONTRACT.append(contract)
         JOB_DATE_POSTED.append(date_posted)
         JOB_DATE_CLOSES.append(date_closes)
+        is_phd_role()
+        is_closed_role()
 
     logging.info(f"Extracted criteria for {len(JOB_CRITERIA_DIV)} jobs.")
+
+# =================================================================================
+# Parse the date strings to YYYY-MM-DD and handle ordinal suffixes.
+# =================================================================================
+
+def parse_date(date_str):
+    cleaned = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_str)
+    return dt.strptime(cleaned, "%d %B %Y").strftime("%Y-%m-%d")
+
 
 # =================================================================================
 # Check if the job is a PhD role by looking for "PhD" in the title or description.
@@ -186,6 +203,20 @@ def is_phd_role():
             JOB_IS_PHD.append(True)
         else:
             JOB_IS_PHD.append(False)
+
+# =================================================================================
+# Check if the job posting is closed.
+# =================================================================================
+
+def is_closed_role():
+    for date in JOB_DATE_CLOSES:
+        if date != "N/A":
+            if time.now() > time.strptime(date, "%Y-%m-%d"):
+                JOB_IS_CLOSED.append(True)
+            else:
+                JOB_IS_CLOSED.append(False)
+        else:
+            JOB_IS_CLOSED.append("N/A")
 
 # =================================================================================
 # EXPORT THE JOB DESCRIPTIONS TO JSON IN JD FOLDER.
@@ -231,6 +262,7 @@ def export_criteria():
         job["date_posted"] = JOB_DATE_POSTED[i] if i < len(JOB_DATE_POSTED) else "N/A"
         job["date_closes"] = JOB_DATE_CLOSES[i] if i < len(JOB_DATE_CLOSES) else "N/A"
         job["is_phd"] = JOB_IS_PHD[i] if i < len(JOB_IS_PHD) else False
+        job["is_closed"] = JOB_IS_CLOSED[i] if i < len(JOB_IS_CLOSED) else "N/A"
 
     fh.write_file("criteria", jobs)
     logging.info("=" * 100)

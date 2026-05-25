@@ -51,4 +51,32 @@ HEADERS = {
 }
 
 
+# =================================================================================
+# CURRENCY PARSING VALUES
+# =================================================================================
+
+RATES_TO_EUR = {
+    #   Default values if currency conversion fails.
+    "GBP": 1.19,
+    "CAD": 0.63,
+    "EUR": 1.00,
+    "USD": 0.93,
+    "NZD": 0.55,
+    "AUD": 0.59,
+    "CNY": 0.13,
+}
+
+
+# Ordered longest-first so $USD isn't automatically parsed instead of NZ$/AU$/CA$
+CURRENCY_PATTERNS = [
+    (r"NZ\$", "NZD"),
+    (r"AU\$", "AUD"),
+    (r"A\$",  "AUD"),
+    (r"CA\$", "CAD"),
+    (r"£",    "GBP"),
+    (r"€",    "EUR"),
+    (r"¥",    "CNY"),
+    (r"\$",   "USD"),
+]
+
 REQUEST_DELAY = 1

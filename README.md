@@ -6,12 +6,12 @@ A Python tool for scraping and analysing academic job postings on [jobs.ac.uk](h
 
 The tool runs as a pipeline with four stages, each of which can be executed independently or all together:
 
-| Option | Stages run |
-|--------|-----------|
-| 1.**Scrape**  | Searches jobs.ac.uk for academic roles (Lecturer, Professor, Instructional Designer, etc.) and collects job listings across all result pages. Deduplicates by URL and saves to JSON. |
-| 2. **Job Details**  | Fetches the full text and structured criteria (salary, hours, contract type) for each job posting by following the individual listing URLs. |
-| 3. **Filter**  | Scans job descriptions for AI-related terminology (e.g. `ai literacy`, `large language model`, `generative ai`, `chatgpt`) using regex matching, and records the matching sentences per job. |
-| 4. **Analyse** | Sorts the filtered dataset by AI match count and prints jobs with more than 2 matches. |
+| Stage | What it does |
+|-------|-------------|
+| 1. **Scrape** | Searches jobs.ac.uk for academic roles (Lecturer, Professor, Instructional Designer, etc.) and collects job listings across all result pages. Deduplicates by URL and saves to JSON. |
+| 2. **Job Details** | Fetches the full text and structured criteria (salary, hours, contract type) for each job posting by following the individual listing URLs. |
+| 3. **Filter** | Scans job descriptions for AI-related terminology (e.g. `ai literacy`, `large language model`, `generative ai`, `chatgpt`) using regex matching, and records the matching sentences per job. |
+| 4. **Analyse** | Loads the filtered dataset into a pandas DataFrame for downstream analysis. |
 
 
 ## Setup
@@ -25,6 +25,8 @@ pip install -r requirements.txt
 ```
 
 ## Usage
+
+### CLI pipeline
 
 ```bash
 python main.py
@@ -50,8 +52,19 @@ Combo options are also supported:
 |--------|-----------|
 | `12`   | Scrape + Job Details |
 | `123`  | Scrape + Job Details + Filter |
-| `612`  | Archive + Scrape + Job Details |
-| `6123` | Archive + Scrape + Job Details + Filter |
+| `126`  | Scrape + Job Details + Archive |
+| `1236` | Scrape + Job Details + Filter + Archive |
+| `26`   | Job Details + Archive |
+
+### Streamlit dashboard
+
+A basic dashboard is also available for browsing the latest filtered dataset:
+
+```bash
+streamlit run app.py
+```
+
+This loads the most recent file from `data/criteria/` and displays it as an interactive table.
 
 ## Configuration
 
@@ -95,10 +108,11 @@ ai-literacy-scraper/
 │   ├── jobs/       # Raw deduplicated job listings from the scraper (timestamped JSON)
 │   └── runs/       # Log file for each run (timestamped .log)
 ├── main.py          # Entry point and menu
+├── app.py           # Streamlit dashboard
 ├── scraper.py       # Fetches job listings from jobs.ac.uk
 ├── job_details.py   # Fetches full job text and structured criteria per listing
 ├── ai_filter.py     # Filters postings by AI terminology using regex
-├── analyse.py       # Sorts and prints jobs by AI match count
+├── analyse.py       # Loads filtered data into pandas for analysis
 ├── config.py        # Search terms, AI terms, request config
 ├── file_handling.py # JSON read/write helpers and file archiving
 ├── log_setup.py     # Logging configuration
@@ -124,11 +138,11 @@ The `archive_old_files()` function (option 6) moves all but the most recent file
 
 ## Dependencies
 
-Key packages: `beautifulsoup4`, `requests`, `rich`, `pandas`, `matplotlib`, `lxml`. Full list in `requirements.txt`.
+Key packages: `beautifulsoup4`, `requests`, `rich`, `pandas`, `streamlit`, `lxml`. Full list in `requirements.txt`.
 
 ## Author
 
 Andrew O'Donovan — PhD Researcher, University College Cork  
 [github.com/andrewodonovanucc](https://github.com/andrewodonovanucc)
 
-[Linkedin](https://ie.linkedin.com/in/andrew-o-donovan)
+[LinkedIn](https://ie.linkedin.com/in/andrew-o-donovan)

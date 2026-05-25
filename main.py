@@ -24,7 +24,7 @@ def menu():
 
 
 def handle_opts(opt):
-    while opt not in ("1", "2", "3", "4", "5", "6", "7", "12", "123", "612", "6123"):
+    while opt not in ("1", "2", "3", "4", "5", "6", "7", "12", "123", "126", "26","1236"):
         logging.info("PLEASE SELECT A VALID OPTION")
         opt = menu()
 
@@ -49,7 +49,7 @@ def handle_opts(opt):
         analyse.init()
         fh.archive_old_files()
     elif opt == "6":
-        logging.info("Chose to archive old files.")
+        logging.info("Chose to Archive old files.")
         fh.archive_old_files()
     elif opt == "7":
         logging.info("BYE!")
@@ -63,13 +63,17 @@ def handle_opts(opt):
         scraper.init()
         job_details.init()
         ai_filter.init()
-    elif opt == "612":
-        logging.info("Chose to archive old files, perform Scrape and get Job Details.")
+    elif opt == "126":
+        logging.info("Chose to perform Scrape, get Job Details and Archive old files.")
         scraper.init()
         job_details.init()
         fh.archive_old_files()
-    elif opt == "6123":
-        logging.info("Chose to archive old files, perform Scrape, get Job Details and Filter.")
+    elif opt == "26":
+        logging.info("Chose to perform get Job Details and Archive old files.")
+        job_details.init()
+        fh.archive_old_files()
+    elif opt == "1236":
+        logging.info("Chose to perform Scrape, get Job Details, Filter and Archive old files.")
         scraper.init()
         job_details.init()
         ai_filter.init()

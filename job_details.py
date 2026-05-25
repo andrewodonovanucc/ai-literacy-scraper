@@ -10,7 +10,7 @@ from rich.progress import Progress
 from bs4 import BeautifulSoup as bs
 import os
 import logging
-
+import parse_salary as ps
 
 # =================================================================================
 # VARIABLES FOR FILE HANDLING
@@ -29,10 +29,15 @@ JOB_DESCRIPTIONS_TEXT = []
 
 JOB_CRITERIA_DIV = []
 
-JOB_SALARY = []
+JOB_SALARY_STRING = []
+JOB_SALARY_LOWER = []
+JOB_SALARY_UPPER = []
 JOB_HOURS = []
 JOB_CONTRACT = []
+JOB_DATE_POSTED = []
+JOB_DATE_CLOSES = []
 
+JOB_IS_PHD = []
 
 
 # =================================================================================
@@ -123,38 +128,64 @@ def get_job_details():
 # =================================================================================
 
 def extract_criteria_fields():
-    logging.info("EXTRACTING CRITERIA FIELDS...")
     for i, div in enumerate(JOB_CRITERIA_DIV):
-        salary = "N/A"
+        salary_lower = None
+        salary_upper = None
         hours = "N/A"
         contract = "N/A"
-
+        date_posted = "N/A"
+        date_closes = "N/A"
+ 
         if div == "N/A":
-            JOB_SALARY.append(salary)
+            JOB_SALARY_LOWER.append(salary_lower)
+            JOB_SALARY_UPPER.append(salary_upper)
             JOB_HOURS.append(hours)
             JOB_CONTRACT.append(contract)
             continue
-
+ 
         for row in div.find_all("tr"):
             th = row.find("th")
             td = row.find("td")
+            
             if not th or not td:
                 continue
             header = th.get_text(strip=True)
             value = td.get_text(separator=" ", strip=True)
             if header == "Salary:":
-                value = ' '.join(td.get_text(separator=" ", strip=True).split())
-                salary = value
+                raw_salary = ' '.join(value.split())
+                salary_lower, salary_upper = ps.parse_salary_bounds(raw_salary)
             elif header == "Hours:":
                 hours = value
             elif header == "Contract Type:":
                 contract = value
+            elif header == "Placed On:":
+                date_posted = value
+            elif header == "Closes:" or header == "Expires:":
+                date_closes = value
 
-        JOB_SALARY.append(salary)
+        JOB_SALARY_STRING.append(raw_salary)
+        JOB_SALARY_LOWER.append(salary_lower)
+        JOB_SALARY_UPPER.append(salary_upper)
         JOB_HOURS.append(hours)
         JOB_CONTRACT.append(contract)
+        JOB_DATE_POSTED.append(date_posted)
+        JOB_DATE_CLOSES.append(date_closes)
 
     logging.info(f"Extracted criteria for {len(JOB_CRITERIA_DIV)} jobs.")
+
+# =================================================================================
+# Check if the job is a PhD role by looking for "PhD" in the title or description.
+# =================================================================================
+
+def is_phd_role():
+    jobs = get_jobs_from_file()
+    for job in jobs:
+        title = job.get("title", "").lower()
+        description = job.get("jd_text", "").lower()
+        if "phd" in title or "phd" in description:
+            JOB_IS_PHD.append(True)
+        else:
+            JOB_IS_PHD.append(False)
 
 # =================================================================================
 # EXPORT THE JOB DESCRIPTIONS TO JSON IN JD FOLDER.
@@ -192,14 +223,22 @@ def export_criteria():
         jobs = json.load(json_file)
     
     for i, job in enumerate(jobs):
-        job["salary"] = JOB_SALARY[i] if i < len(JOB_SALARY) else "N/A"
+        job["salary_text"] = JOB_SALARY_STRING[i] if i < len(JOB_SALARY_STRING) else "N/A"
+        job["salary_lower"] = JOB_SALARY_LOWER[i] if i < len(JOB_SALARY_LOWER) else None
+        job["salary_upper"] = JOB_SALARY_UPPER[i] if i < len(JOB_SALARY_UPPER) else None
         job["hours"] = JOB_HOURS[i] if i < len(JOB_HOURS) else "N/A"
         job["contract_type"] = JOB_CONTRACT[i] if i < len(JOB_CONTRACT) else "N/A"
+        job["date_posted"] = JOB_DATE_POSTED[i] if i < len(JOB_DATE_POSTED) else "N/A"
+        job["date_closes"] = JOB_DATE_CLOSES[i] if i < len(JOB_DATE_CLOSES) else "N/A"
+        job["is_phd"] = JOB_IS_PHD[i] if i < len(JOB_IS_PHD) else False
 
     fh.write_file("criteria", jobs)
     logging.info("=" * 100)
     logging.info(f"Saved {len(jobs)} Criteria.")
+    logging.info(f"{len(JOB_IS_PHD)} PhD roles out of {len(jobs)} identified.")
     logging.info("=" * 100)
+
+
 
 # ======================================================================================
 # RUN EVERYTHING
@@ -209,6 +248,9 @@ def init():
     global INPUT_FILE, INPUT_PATH
     INPUT_FILE = fh.get_most_recent_item("jobs")
     INPUT_PATH = os.path.dirname(INPUT_FILE)
+    logging.info("GETTING UP TO DATE CURRENCY RATES...")
+    ps.get_updated_currency_rates()
+    logging.info("EXTRACTING CRITERIA FIELDS...")
     read_json_to_dict()
     get_job_details()
     

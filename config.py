@@ -5,7 +5,7 @@ SEARCH_TERMS = [
     "Educational Developer",
     "Academic Developer",
     "Faculty Position",
-    "Researcher",
+    # "Researcher",
 ]
 
 AI_TERMS = [
@@ -39,6 +39,11 @@ AI_TERMS = [
     "ai in learning",
     "ai policy",
 ]
+
+LOCATIONS = {
+    "GB": "United Kingdom",
+    "IE": "Ireland"
+}
 
 # =================================================================================
 # HEADERS TO PASS FOR REQUEST
@@ -79,4 +84,4 @@ CURRENCY_PATTERNS = [
     (r"\$",   "USD"),
 ]
 
-REQUEST_DELAY = 1
+REQUEST_DELAY = 1.5

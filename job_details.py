@@ -3,10 +3,12 @@
 # =================================================================================
 
 import file_handling as fh
-import config
+from config import HEADERS
 import json
-import datetime as dt
-import time
+from datetime import datetime as dt
+import time as time_module
+import random
+import logging
 import re
 import requests
 from rich.progress import Progress
@@ -42,6 +44,8 @@ JOB_DATE_CLOSES = []
 
 JOB_IS_PHD = []
 JOB_IS_CLOSED = []
+
+LOCATION_DIV = []
 
 
 # =================================================================================
@@ -80,11 +84,25 @@ def get_job_details():
     total = len(JOB_POSTING_URLS)
     logging.info("TOTAL POTENTIAL JOB DESCRIPTIONS AND CRITERIA: " + str(total))
     logging.info("=" * 100)
+    logging.info("SLEEPING FOR 1 MINUTE")
+    logging.info("=" * 100)
+    time_module.sleep(60)
+    logging.info("SLEEP COMPLETE...")
+    logging.info("=" * 100)
+    session = requests.Session()
+    session.headers.update(HEADERS)
+
+    logging.info("STARTED SESSION...")
+    logging.info("=" * 100)
 
     with Progress() as progress:
         task = progress.add_task("FETCHING JOB DETAILS...", total=total)
         for i, url in enumerate(JOB_POSTING_URLS):
-            r = requests.get(url, timeout=60, headers=config.HEADERS)
+            time_module.sleep(1)
+            
+            #   Added a timestamp to make the session unique to prevent the cache age from getting too large.
+            randomised_url = url + f"?_={int(time_module.time())}"      
+            r = session.get(randomised_url, timeout=60)
             if r.status_code != 200:
                 logging.info("Request failed")
             soup = bs(r.text, "html.parser")
@@ -103,7 +121,7 @@ def get_job_details():
                 JOB_DESCRIPTIONS_TEXT.append(alt_jd_text)
             else:
                 JOB_DESCRIPTIONS_TEXT.append("N/A")
-                logging.info(f"JOB DESCRIPTION NOT FOUND FOR URL {i + 1}: " + str(url))
+                logging.info(f"\nJOB DESCRIPTION NOT FOUND FOR URL {i + 1}: " + str(url) +"\n")
 
             #   JOB CRITERIA
             job_criteria_div = soup.find("div", class_="j-advert-details__container")
@@ -117,11 +135,33 @@ def get_job_details():
                 JOB_CRITERIA_DIV.append(alt_job_criteria_div)
             else:
                 JOB_CRITERIA_DIV.append("N/A")
-                logging.info(f"JOB CRITERIA NOT FOUND FOR URL {i + 1}: " + str(url))
+                logging.info(f"\nJOB CRITERIA NOT FOUND FOR URL {i + 1}: " + str(url) +"\n")
+
+            # LOCATION
+            location = "N/A"
+            for p in soup.find_all("p"):
+                if "Location(s):" in p.get_text():
+                    parent = p.find_parent("div")
+                    if parent:
+                        loc_input = parent.find("input", class_="j-form-input__disabled-cat")
+                        if loc_input:
+                            location = loc_input.get("value", "N/A")
+                    break
+
+            # logging.info("LOCATION VALUE: " + location)
+            if any(region in location for region in ("England", "Scotland", "Wales", "Northern Ireland", "London")):
+                LOCATION_DIV.append("UK")
+            elif "Ireland" in location:
+                LOCATION_DIV.append("IE")
+            else:
+                logging.info(f"\nLOCATION NOT RECOGNISED for URL {i + 1}: {url}, APPENDED AS {location}\n")
+                LOCATION_DIV.append(str(location))
+
 
             progress.update(task, advance=1)
             r.close()
-            # time.sleep(config.REQUEST_DELAY)
+           # time.sleep(config.REQUEST_DELAY)
+            
 
     extract_criteria_fields()
     export_job_descriptions()
@@ -187,7 +227,12 @@ def extract_criteria_fields():
 
 def parse_date(date_str):
     cleaned = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_str)
-    return dt.strptime(cleaned, "%d %B %Y").strftime("%Y-%m-%d")
+    try:
+        return dt.strptime(cleaned, "%d %B %Y").strftime("%Y-%m-%d")
+    except ValueError:
+        logging.info(f"DATE PARSING FAILED FOR: {date_str}")
+        return "N/A"
+    
 
 
 # =================================================================================
@@ -211,7 +256,7 @@ def is_phd_role():
 def is_closed_role():
     for date in JOB_DATE_CLOSES:
         if date != "N/A":
-            if time.now() > time.strptime(date, "%Y-%m-%d"):
+            if dt.now() > dt.strptime(date, "%Y-%m-%d"):
                 JOB_IS_CLOSED.append(True)
             else:
                 JOB_IS_CLOSED.append(False)
@@ -263,6 +308,7 @@ def export_criteria():
         job["date_closes"] = JOB_DATE_CLOSES[i] if i < len(JOB_DATE_CLOSES) else "N/A"
         job["is_phd"] = JOB_IS_PHD[i] if i < len(JOB_IS_PHD) else False
         job["is_closed"] = JOB_IS_CLOSED[i] if i < len(JOB_IS_CLOSED) else "N/A"
+        job["location"] = LOCATION_DIV[i] if i < len(LOCATION_DIV) else "N/A"
 
     fh.write_file("criteria", jobs)
     logging.info("=" * 100)

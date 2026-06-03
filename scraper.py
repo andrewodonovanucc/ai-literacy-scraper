@@ -8,7 +8,7 @@ import logging
 from datetime import datetime as dt
 from bs4 import BeautifulSoup as bs
 from rich.progress import Progress
-from config import SEARCH_TERMS, REQUEST_DELAY
+from config import SEARCH_TERMS, REQUEST_DELAY, LOCATIONS, HEADERS
 import json
 import math
 import os
@@ -53,25 +53,6 @@ def get_total_results(soup):
 
 
 # =======================================================================================
-#   COUNTS THE OVERALL RESULTS FOR JOB LISTINGS
-# =======================================================================================
-
-
-def get_sum_total_results():
-    for term in SEARCH_TERMS:
-        global sum_total_results
-        # Fetch first page to get total results
-        first_url = BASE_SEARCH_URL + fix_url(term)
-        r = requests.get(first_url)
-
-        soup = bs(r.text, "html.parser")
-
-        # Calculate how many results for each page
-        total = get_total_results(soup)
-        sum_total_results += total
-
-
-# =======================================================================================
 #   REPLACE SPACES WITH "+" SIGN IN THE URL
 # =======================================================================================
 
@@ -82,6 +63,37 @@ def fix_url(url):
 
 
 # =======================================================================================
+#   BUILD SEARCH URL FOR A GIVEN TERM AND LOCATION
+# =======================================================================================
+
+
+def build_search_url(term, country_code, country_name):
+    location_param = f"&country%5B%5D={fix_url(country_name)}&country%5B%5D={country_code}&location={fix_url(country_name)}"
+    return BASE_SEARCH_URL + fix_url(term) + location_param + f"&_={int(time.time())}"
+
+
+# =======================================================================================
+#   COUNTS THE OVERALL RESULTS FOR JOB LISTINGS
+# =======================================================================================
+
+def get_sum_total_results(session):
+    global sum_total_results
+
+    for term in SEARCH_TERMS:
+        for code, name in LOCATIONS.items():
+            url = build_search_url(term, code, name)
+            r = session.get(url, timeout=60)
+            soup = bs(r.text, "html.parser")
+            result_count = soup.find("strong", class_="job-count")
+            if not result_count:
+                logging.info("REQUEST HEADERS: " + str(r.headers))
+            total = get_total_results(soup)
+            # logging.info(f"\nTotal for '{term}' in {name}: {total}")
+            sum_total_results += total
+            r.close()
+
+
+# =======================================================================================
 #   FETCH ALL RESULTS FROM EACH PAGE
 # =======================================================================================
 
@@ -89,7 +101,16 @@ def fix_url(url):
 def fetch_all_pages():
     global sum_total_results
 
-    get_sum_total_results()
+    logging.info("=" * 100)
+    logging.info("SLEEPING FOR 1 MINUTE")
+    logging.info("=" * 100)
+    time.sleep(60)
+    logging.info("SLEEP COMPLETE...")
+
+    session = requests.Session()
+    session.headers.update(HEADERS)
+
+    get_sum_total_results(session)
     logging.info("OVERALL TOTAL RESULTS: " + str(sum_total_results))
 
     total_pages = math.ceil(sum_total_results / PAGE_SIZE)
@@ -98,45 +119,43 @@ def fetch_all_pages():
         task = progress.add_task("Fetching all jobs...", total=total_pages)
 
         for term in SEARCH_TERMS:
-            logging.info("\nSearching: " + term)
+            for code, name in LOCATIONS.items():
+                logging.info(f"\nSearching: {term} | {name}")
 
-            first_url = BASE_SEARCH_URL + fix_url(term)
-            r = requests.get(first_url)
-            time.sleep(REQUEST_DELAY)
-
-            soup = bs(r.text, "html.parser")
-
-            total = get_total_results(soup)
-            logging.info("Total results for '" + term + "': " + str(total))
-
-            jobs = soup.find_all("div", class_="j-search-result__result")
-            FOUND_JOBS.extend(jobs)
-            progress.update(task, advance=1)
-
-            start_index = PAGE_SIZE
-            while start_index < total:
-                page_url = (
-                    BASE_SEARCH_URL
-                    + fix_url(term)
-                    + "&SortOrder=0&pageSize="
-                    + str(PAGE_SIZE)
-                    + "&startIndex="
-                    + str(start_index)
-                )
-                r = requests.get(page_url)
-                # time.sleep(REQUEST_DELAY)
-
+                url = build_search_url(term, code, name)
+                r = session.get(url, timeout=60)
                 soup = bs(r.text, "html.parser")
+                total = get_total_results(soup)
+                # logging.info(f"\nTotal results for '{term}' in {name}: {total}\n")
+
                 jobs = soup.find_all("div", class_="j-search-result__result")
                 FOUND_JOBS.extend(jobs)
-
-                start_index += PAGE_SIZE
                 progress.update(task, advance=1)
+                r.close()
+
+                start_index = PAGE_SIZE
+                while start_index < total:
+                    page_url = (
+                        build_search_url(term, code, name)
+                        + "&SortOrder=0&pageSize="
+                        + str(PAGE_SIZE)
+                        + "&startIndex="
+                        + str(start_index)
+                    )
+                    r = session.get(page_url, timeout=60)
+                    soup = bs(r.text, "html.parser")
+                    jobs = soup.find_all("div", class_="j-search-result__result")
+                    FOUND_JOBS.extend(jobs)
+                    start_index += PAGE_SIZE
+                    progress.update(task, advance=1)
+                    r.close()
 
 
 # =======================================================================================
 #   PUT JOBS IN DICT FORMAT TO BE USED TO WRITE JSON
 # =======================================================================================
+
+
 def parse_jobs():
     for job in FOUND_JOBS:
         title, url, dept, institution = None, None, None, None

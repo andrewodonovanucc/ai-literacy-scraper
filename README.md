@@ -8,8 +8,8 @@ The tool runs as a pipeline with four stages, each of which can be executed inde
 
 | Stage | What it does |
 |-------|-------------|
-| 1. **Scrape** | Searches jobs.ac.uk for academic roles (Lecturer, Professor, Instructional Designer, etc.) and collects job listings across all result pages. Deduplicates by URL and saves to JSON. |
-| 2. **Job Details** | Fetches the full text and structured criteria (salary, hours, contract type) for each job posting by following the individual listing URLs. |
+| 1. **Scrape** | Searches jobs.ac.uk for academic roles (Lecturer, Professor, Instructional Designer, etc.) across configured locations and collects job listings across all result pages. Deduplicates by URL and saves to JSON. |
+| 2. **Job Details** | Fetches the full text and structured criteria (salary, hours, contract type, dates, location) for each job posting by following the individual listing URLs. |
 | 3. **Filter** | Scans job descriptions for AI-related terminology (e.g. `ai literacy`, `large language model`, `generative ai`, `chatgpt`) using regex matching, and records the matching sentences per job. |
 | 4. **Analyse** | Loads the filtered dataset into a pandas DataFrame for downstream analysis. |
 
@@ -54,7 +54,11 @@ Combo options are also supported:
 | `123`  | Scrape + Job Details + Filter |
 | `126`  | Scrape + Job Details + Archive |
 | `1236` | Scrape + Job Details + Filter + Archive |
+| `1246` | Scrape + Job Details + Analyse + Archive |
+| `24`   | Job Details + Analyse |
+| `246`  | Job Details + Analyse + Archive |
 | `26`   | Job Details + Archive |
+| `46`   | Analyse + Archive |
 
 ### Streamlit dashboard
 
@@ -81,28 +85,56 @@ SEARCH_TERMS = [
     "Faculty Position",
 ]
 
+# Locations to search (country code: display name)
+LOCATIONS = {
+    "GB": "United Kingdom",
+    "IE": "Ireland",
+}
+
 # AI-related terms to match in job descriptions
 AI_TERMS = [
     "artificial intelligence",
-    "ai literacy",
-    "large language model",
+    "ai",
+    "machine learning",
+    "deep learning",
+    "neural network",
     "generative ai",
+    "gen ai",
+    "genai",
+    "large language model",
     "llm",
+    "foundation model",
     "chatgpt",
-    # ... and more
+    "gpt-4",
+    "gpt4",
+    "openai",
+    "gpt-5",
+    "claude",
+    "anthropic",
+    "gemini",
+    "copilot",
+    "llama",
+    "ai literacy",
+    "ai tool",
+    "ai-powered",
+    "ai-enabled",
+    "ai in education",
+    "ai in teaching",
+    "ai in learning",
+    "ai policy",
 ]
 
-REQUEST_DELAY = 1  # seconds between requests
+REQUEST_DELAY = 1.5  # seconds between requests
 ```
 
-Modify `SEARCH_TERMS` or `AI_TERMS` to adjust the scope of the scrape or the filter criteria.
+Modify `SEARCH_TERMS`, `LOCATIONS`, or `AI_TERMS` to adjust the scope of the scrape or the filter criteria. Add or remove entries from `LOCATIONS` to target different countries supported by jobs.ac.uk.
 
 ## Project structure
 
 ```
 ai-literacy-scraper/
 ├── data/
-│   ├── criteria/   # Jobs with salary, hours, and contract type added (timestamped JSON)
+│   ├── criteria/   # Jobs with salary, hours, contract type, dates, and location added (timestamped JSON)
 │   ├── filters/    # Jobs with AI match count and matched sentences added (timestamped JSON)
 │   ├── jd/         # Jobs with full job description text added (timestamped JSON)
 │   ├── jobs/       # Raw deduplicated job listings from the scraper (timestamped JSON)
@@ -113,9 +145,10 @@ ai-literacy-scraper/
 ├── job_details.py   # Fetches full job text and structured criteria per listing
 ├── ai_filter.py     # Filters postings by AI terminology using regex
 ├── analyse.py       # Loads filtered data into pandas for analysis
-├── config.py        # Search terms, AI terms, request config
+├── config.py        # Search terms, locations, AI terms, currency rates, request config
 ├── file_handling.py # JSON read/write helpers and file archiving
 ├── log_setup.py     # Logging configuration
+├── parse_salary.py  # Salary string parsing and currency normalisation
 └── requirements.txt
 ```
 
@@ -131,14 +164,18 @@ The `archive_old_files()` function (option 6) moves all but the most recent file
 
 ## Notes
 
-- The scraper includes a configurable delay between requests (`REQUEST_DELAY` in `config.py`) to avoid hammering the server.
+- The scraper uses a persistent `requests.Session` with cache-busting query parameters to avoid stale CloudFront cached responses from jobs.ac.uk.
+- A configurable delay between requests (`REQUEST_DELAY` in `config.py`) is included to avoid hammering the server.
+- Salary figures are parsed and normalised to GBP where possible via `parse_salary.py`, with fallback exchange rates defined in `config.py` under `RATES_TO_EUR`.
+- Multiple currency formats are supported (£, €, $, NZ$, AU$, CA$, ¥) with longest-match parsing to avoid ambiguity.
+- Each job posting captures location (e.g. `UK`, `IE`) extracted from the listing page.
 - Progress is shown via `rich` progress bars during scraping and filtering.
 - All output is logged to `data/runs/` and written to JSON files for downstream analysis.
 - This tool is intended for academic research purposes only. Please respect jobs.ac.uk's terms of service.
 
 ## Dependencies
 
-Key packages: `beautifulsoup4`, `requests`, `rich`, `pandas`, `streamlit`, `lxml`. Full list in `requirements.txt`.
+Key packages: `beautifulsoup4`, `requests`, `rich`, `pandas`, `streamlit`, `lxml`, `CurrencyConverter`. Full list in `requirements.txt`.
 
 ## Author
 

@@ -8,8 +8,8 @@ The tool runs as a pipeline with four stages, each of which can be executed inde
 
 | Stage | What it does |
 |-------|-------------|
-| 1. **Scrape** | Searches jobs.ac.uk for academic roles (Lecturer, Professor, Instructional Designer, etc.) across configured locations and collects job listings across all result pages. Deduplicates by URL and saves to JSON. |
-| 2. **Job Details** | Fetches the full text and structured criteria (salary, hours, contract type, dates, location) for each job posting by following the individual listing URLs. |
+| 1. **Scrape** | Searches jobs.ac.uk for academic roles (Lecturer, Professor, Research Fellow, etc.) and PhD studentships across configured locations. Collects job listings across all result pages and deduplicates by URL. |
+| 2. **Job Details** | Fetches the full text and structured criteria (salary, hours, contract type, dates, location) for each job posting by following the individual listing URLs. Splits output into `criteria_academic` and `criteria_phd`. |
 | 3. **Filter** | Scans job descriptions for AI-related terminology (e.g. `ai literacy`, `large language model`, `generative ai`, `chatgpt`) using regex matching, and records the matching sentences per job. |
 | 4. **Analyse** | Loads the filtered dataset into a pandas DataFrame for downstream analysis. |
 
@@ -60,6 +60,18 @@ Combo options are also supported:
 | `26`   | Job Details + Archive |
 | `46`   | Analyse + Archive |
 
+### Scraper sub-menu
+
+When stage 1 runs, you'll be prompted to choose which roles to search for:
+
+```
+1. JUST ACADEMIC JOBS
+2. JUST PHD STUDENTSHIPS
+3. BOTH
+```
+
+Option 1 uses `JOB_SEARCH_TERMS`, option 2 uses `PHD_SEARCH_TERMS`, and option 3 uses `COMBINED_SEARCH_TERMS` (see `config.py`).
+
 ### Streamlit dashboard
 
 A basic dashboard is also available for browsing the latest filtered dataset:
@@ -75,14 +87,24 @@ This loads the most recent file from `data/criteria/` and displays it as an inte
 All search parameters are in `config.py`:
 
 ```python
-# Job roles to search for
-SEARCH_TERMS = [
+# Job roles to search for (academic positions)
+JOB_SEARCH_TERMS = [
     "Lecturer",
     "Professor",
-    "Instructional Designer",
-    "Educational Developer",
-    "Academic Developer",
-    "Faculty Position",
+    "Teaching Fellow",
+    "Teaching Associate",
+    "Stipendiary",
+    "Dean",
+    "Head of Department",
+    "Chair",
+    "Reader",
+]
+
+# PhD studentship roles
+PHD_SEARCH_TERMS = [
+    "Research Associate",
+    "Research Fellow",
+    "Postdoctoral",
 ]
 
 # Locations to search (country code: display name)
@@ -127,18 +149,21 @@ AI_TERMS = [
 REQUEST_DELAY = 1.5  # seconds between requests
 ```
 
-Modify `SEARCH_TERMS`, `LOCATIONS`, or `AI_TERMS` to adjust the scope of the scrape or the filter criteria. Add or remove entries from `LOCATIONS` to target different countries supported by jobs.ac.uk.
+Modify `JOB_SEARCH_TERMS`, `PHD_SEARCH_TERMS`, `LOCATIONS`, or `AI_TERMS` to adjust the scope of the scrape or the filter criteria. Add or remove entries from `LOCATIONS` to target different countries supported by jobs.ac.uk.
 
 ## Project structure
 
 ```
 ai-literacy-scraper/
 ├── data/
-│   ├── criteria/   # Jobs with salary, hours, contract type, dates, and location added (timestamped JSON)
-│   ├── filters/    # Jobs with AI match count and matched sentences added (timestamped JSON)
-│   ├── jd/         # Jobs with full job description text added (timestamped JSON)
-│   ├── jobs/       # Raw deduplicated job listings from the scraper (timestamped JSON)
-│   └── runs/       # Log file for each run (timestamped .log)
+│   ├── analyse/            # Jobs with URL markdown added for Streamlit (timestamped JSON)
+│   ├── criteria/           # All jobs with salary, hours, contract type, dates, and location (timestamped JSON)
+│   ├── criteria_academic/  # Subset of criteria: non-PhD roles only (timestamped JSON)
+│   ├── criteria_phd/       # Subset of criteria: PhD studentships only (timestamped JSON)
+│   ├── filters/            # Jobs with AI match count and matched sentences added (timestamped JSON)
+│   ├── jd/                 # Jobs with full job description text added (timestamped JSON)
+│   ├── jobs/               # Raw deduplicated job listings from the scraper (timestamped JSON)
+│   └── runs/               # Log file for each run (timestamped .log)
 ├── main.py          # Entry point and menu
 ├── app.py           # Streamlit dashboard
 ├── scraper.py       # Fetches job listings from jobs.ac.uk
@@ -157,7 +182,10 @@ ai-literacy-scraper/
 Each stage reads from the most recent file in the relevant input folder and writes a new timestamped file to its output folder. The full chain is:
 
 ```
-jobs/ → jd/ → criteria/ → filters/
+jobs/ → jd/ → criteria/ ┬→ criteria_academic/
+                         └→ criteria_phd/
+                                ↓
+                           filters/ → analyse/
 ```
 
 The `archive_old_files()` function (option 6) moves all but the most recent file in each folder to `../ai-literacy-scraper-data-backup/`.
@@ -166,9 +194,10 @@ The `archive_old_files()` function (option 6) moves all but the most recent file
 
 - The scraper uses a persistent `requests.Session` with cache-busting query parameters to avoid stale CloudFront cached responses from jobs.ac.uk.
 - A configurable delay between requests (`REQUEST_DELAY` in `config.py`) is included to avoid hammering the server.
-- Salary figures are parsed and normalised to GBP where possible via `parse_salary.py`, with fallback exchange rates defined in `config.py` under `RATES_TO_EUR`.
+- Salary figures are parsed and normalised to EUR where possible via `parse_salary.py`, with fallback exchange rates defined in `config.py` under `RATES_TO_EUR`.
 - Multiple currency formats are supported (£, €, $, NZ$, AU$, CA$, ¥) with longest-match parsing to avoid ambiguity.
 - Each job posting captures location (e.g. `UK`, `IE`) extracted from the listing page.
+- PhD role detection (`is_phd`) checks the job title and, where available, the full job description text. The description is only available after stage 2 completes, so detection is title-only if stage 2 has not been run.
 - Progress is shown via `rich` progress bars during scraping and filtering.
 - All output is logged to `data/runs/` and written to JSON files for downstream analysis.
 - This tool is intended for academic research purposes only. Please respect jobs.ac.uk's terms of service.

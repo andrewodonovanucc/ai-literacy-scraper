@@ -216,8 +216,8 @@ def extract_criteria_fields():
         JOB_CONTRACT.append(contract)
         JOB_DATE_POSTED.append(date_posted)
         JOB_DATE_CLOSES.append(date_closes)
-        is_phd_role()
-        is_closed_role()
+    is_phd_role()
+    is_closed_role()
 
     logging.info(f"Extracted criteria for {len(JOB_CRITERIA_DIV)} jobs.")
 
@@ -307,13 +307,21 @@ def export_criteria():
         job["date_posted"] = JOB_DATE_POSTED[i] if i < len(JOB_DATE_POSTED) else "N/A"
         job["date_closes"] = JOB_DATE_CLOSES[i] if i < len(JOB_DATE_CLOSES) else "N/A"
         job["is_phd"] = JOB_IS_PHD[i] if i < len(JOB_IS_PHD) else False
-        job["is_closed"] = JOB_IS_CLOSED[i] if i < len(JOB_IS_CLOSED) else "N/A"
+        job["is_closed"] = JOB_IS_CLOSED[i] if i < len(JOB_IS_CLOSED) else False
         job["location"] = LOCATION_DIV[i] if i < len(LOCATION_DIV) else "N/A"
 
+    academic = [job for job in jobs if not job["is_phd"]]
+    phd      = [job for job in jobs if job["is_phd"]]
+
     fh.write_file("criteria", jobs)
+    fh.write_file("criteria_academic", academic)
+    fh.write_file("criteria_phd", phd)
+
     logging.info("=" * 100)
-    logging.info(f"Saved {len(jobs)} Criteria.")
-    logging.info(f"{len(JOB_IS_PHD)} PhD roles out of {len(jobs)} identified.")
+    logging.info(f"Saved {len(jobs)} total criteria.")
+    logging.info(f"  Academic: {len(academic)}")
+    logging.info(f"  PhD Studentships: {len(phd)}")
+    logging.info(f"{JOB_IS_CLOSED.count(True)} closed roles out of {len(jobs)} identified.")
     logging.info("=" * 100)
 
 

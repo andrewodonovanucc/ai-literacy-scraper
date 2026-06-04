@@ -30,9 +30,9 @@ def get_jobs_from_file():
 def update_jobs_with_links():
     global JOBS_FROM_JSON
     for job in JOBS_FROM_JSON:
-        print(job["url"])
+        # print(job["url"])
         job["url"] = "[LINK](" + job["url"] + ")"
-        print(job["url"])
+        # print(job["url"])
 
     fh.write_file("analyse", JOBS_FROM_JSON)
 

@@ -1,11 +1,35 @@
-SEARCH_TERMS = [
+JOB_SEARCH_TERMS = [
     "Lecturer",
     "Professor",
-    "Instructional Designer",
-    "Educational Developer",
-    "Academic Developer",
-    "Faculty Position",
-    # "Researcher",
+    "Teaching Fellow",
+    "Teaching Associate",
+    "Stipendiary",
+    "Dean",
+    "Head of Department",
+    "Chair",
+    "Reader"
+]
+
+PHD_SEARCH_TERMS = [
+    "Research Associate",
+    "Research Fellow",
+    "Postdoctoral"
+]
+
+COMBINED_SEARCH_TERMS = [
+    "Lecturer",
+    "Professor",
+    "Teaching Fellow",
+    "Teaching Associate",
+    "Stipendiary",
+    "Dean",
+    "Head of Department",
+    "Chair",
+    "Reader",
+    "Research Associate",
+    "Research Fellow",
+    "Postdoctoral"
+
 ]
 
 AI_TERMS = [

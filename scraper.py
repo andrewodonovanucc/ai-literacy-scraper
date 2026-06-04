@@ -8,7 +8,7 @@ import logging
 from datetime import datetime as dt
 from bs4 import BeautifulSoup as bs
 from rich.progress import Progress
-from config import SEARCH_TERMS, REQUEST_DELAY, LOCATIONS, HEADERS
+from config import JOB_SEARCH_TERMS, PHD_SEARCH_TERMS, COMBINED_SEARCH_TERMS, REQUEST_DELAY, LOCATIONS, HEADERS
 import json
 import math
 import os
@@ -39,6 +39,42 @@ PARSED_JOBS = []
 sum_total_results = 0
 
 # =======================================================================================
+#   MENU TO SELECT SEARCH TERMS
+# =======================================================================================
+def menu():    
+    logging.info("=" * 100)
+    logging.info("  SELECT AN OPTION:   ")
+    logging.info("=" * 100)
+    logging.info("  1. JUST ACADEMIC JOBS")
+    logging.info("  2. JUST PHD STUDENTSHIPS")
+    logging.info("  3. BOTH")
+    logging.info("=" * 100)
+    chosen_opt = input("Input Choice: ")
+    logging.info("=" * 100)
+    return chosen_opt
+
+# =======================================================================================
+#   SELECT SEARCH TERM LIST YOU WANT TO USE
+# =======================================================================================
+
+def select_terms_list():
+    opt = menu()
+    while opt not in ("1", "2", "3"):
+        logging.info("PLEASE SELECT A VALID OPTION")
+        opt = menu()
+
+    logging.info("SELECTED OPTION: " + opt)
+    if opt == "1":
+        logging.info("Chose to Search Jobs.")
+        return JOB_SEARCH_TERMS
+    elif opt == "2":
+        logging.info("Chose to Search PhD Studentships.")
+        return PHD_SEARCH_TERMS
+    elif opt == "3":
+        logging.info("Chose to Search Jobs and PhD Studentships.")
+        return COMBINED_SEARCH_TERMS
+
+# =======================================================================================
 #   COUNTS THE TOTAL RESULTS PER SEARCH TERM (25/PAGE)
 # =======================================================================================
 
@@ -56,7 +92,6 @@ def get_total_results(soup):
 #   REPLACE SPACES WITH "+" SIGN IN THE URL
 # =======================================================================================
 
-
 def fix_url(url):
     url = url.replace(" ", "+")
     return url
@@ -65,7 +100,6 @@ def fix_url(url):
 # =======================================================================================
 #   BUILD SEARCH URL FOR A GIVEN TERM AND LOCATION
 # =======================================================================================
-
 
 def build_search_url(term, country_code, country_name):
     location_param = f"&country%5B%5D={fix_url(country_name)}&country%5B%5D={country_code}&location={fix_url(country_name)}"
@@ -76,10 +110,10 @@ def build_search_url(term, country_code, country_name):
 #   COUNTS THE OVERALL RESULTS FOR JOB LISTINGS
 # =======================================================================================
 
-def get_sum_total_results(session):
+def get_sum_total_results(session, stl):
     global sum_total_results
 
-    for term in SEARCH_TERMS:
+    for term in stl:
         for code, name in LOCATIONS.items():
             url = build_search_url(term, code, name)
             r = session.get(url, timeout=60)
@@ -97,9 +131,10 @@ def get_sum_total_results(session):
 #   FETCH ALL RESULTS FROM EACH PAGE
 # =======================================================================================
 
-
 def fetch_all_pages():
     global sum_total_results
+
+    stl = select_terms_list()
 
     logging.info("=" * 100)
     logging.info("SLEEPING FOR 1 MINUTE")
@@ -110,7 +145,7 @@ def fetch_all_pages():
     session = requests.Session()
     session.headers.update(HEADERS)
 
-    get_sum_total_results(session)
+    get_sum_total_results(session, stl)
     logging.info("OVERALL TOTAL RESULTS: " + str(sum_total_results))
 
     total_pages = math.ceil(sum_total_results / PAGE_SIZE)
@@ -118,14 +153,13 @@ def fetch_all_pages():
     with Progress() as progress:
         task = progress.add_task("Fetching all jobs...", total=total_pages)
 
-        for term in SEARCH_TERMS:
+        for term in stl:
             for code, name in LOCATIONS.items():
-                logging.info(f"\nSearching: {term} | {name}")
-
                 url = build_search_url(term, code, name)
                 r = session.get(url, timeout=60)
                 soup = bs(r.text, "html.parser")
                 total = get_total_results(soup)
+                logging.info(f"\nSearching: {term} | {code} | Total: {total}")
                 # logging.info(f"\nTotal results for '{term}' in {name}: {total}\n")
 
                 jobs = soup.find_all("div", class_="j-search-result__result")
@@ -219,7 +253,6 @@ def deduplicate():
 # =======================================================================================
 #   RUN EVERYTHING
 # =======================================================================================
-
 
 def init():
     fetch_all_pages()

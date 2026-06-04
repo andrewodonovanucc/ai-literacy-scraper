@@ -70,7 +70,7 @@ def write_file(folder, data_array):
 def archive_old_files(folders=None):
     """Move all but the most recent file in each data subfolder to ../data-backup."""
     if folders is None:
-        folders = ["criteria", "filters", "jd", "jobs", "runs"]
+        folders = ["analyse", "criteria", "criteria_academic", "criteria_phd", "filters", "jd", "jobs", "runs"]
 
     for folder in folders:
         source_dir = os.path.join("data", folder)

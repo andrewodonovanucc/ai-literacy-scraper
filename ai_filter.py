@@ -38,12 +38,10 @@ def read_job_descs():
 #   MAKE THE REGEX PATTERN
 # =================================================================================
 
-
 def make_regex():
     for term in AI_TERMS:
         pattern = re.compile(r"\b" + re.escape(term) + r"\b", re.IGNORECASE)
         AI_PATTERNS.append((term, pattern))
-
 
 # =================================================================================
 #   CHECK JOB DESCRIPTION FOR AI TERMS

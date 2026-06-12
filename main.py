@@ -1,10 +1,16 @@
+# =================================================================================
+#   IMPORTS
+# =================================================================================
+
 import logging
-import scraper
-import job_details
-import ai_filter
-import analyse
 import log_setup
 import file_handling as fh
+import scraper, job_details, ai_filter, analyse, app
+
+
+# =================================================================================
+#   MENU OF OPTIONA
+# =================================================================================
 
 def menu():
     logging.info("=" * 100)
@@ -16,7 +22,8 @@ def menu():
     logging.info("  4. Analyse")
     logging.info("  5. All")
     logging.info("  6. Archive old files")
-    logging.info("  7. Exit")
+    logging.info("  7. Run App")
+    logging.info("  8. Exit")
     logging.info("=" * 100)
     chosen_opt = input("Input Choice: ")
     logging.info("=" * 100)
@@ -24,7 +31,7 @@ def menu():
 
 
 def handle_opts(opt):
-    while opt not in ("1", "2", "3", "4", "5", "6", "7", "12", "123", "126", "26","1236", "24", "246", "46", "1246"):
+    while opt not in ("1", "2", "3", "4", "5", "6", "7", "8", "12", "123", "126", "26","1236", "24", "246", "46", "1246"):
         logging.info("PLEASE SELECT A VALID OPTION")
         opt = menu()
 
@@ -52,6 +59,9 @@ def handle_opts(opt):
         logging.info("Chose to Archive old files.")
         fh.archive_old_files()
     elif opt == "7":
+        logging.info("Chose to run the Streamlit Web App.")
+        app.init()
+    elif opt == "8":
         logging.info("BYE!")
         exit()
     elif opt == "12":
@@ -104,7 +114,6 @@ def main():
     log_setup.setup_logger()
     option = menu()
     handle_opts(option)
-
 
 if __name__ == "__main__":
     main()

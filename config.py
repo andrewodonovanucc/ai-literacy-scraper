@@ -29,32 +29,40 @@ COMBINED_SEARCH_TERMS = [
     "Research Associate",
     "Research Fellow",
     "Postdoctoral"
-
 ]
 
 AI_TERMS = [
+    # General AI
     "artificial intelligence",
-    "ai",
     "machine learning",
     "deep learning",
     "neural network",
+    "reinforcement learning",
+    "natural language processing",
+    "nlp",
+    "computer vision",
+
+    # Generative AI
     "generative ai",
     "gen ai",
     "genai",
     "large language model",
     "llm",
     "foundation model",
+
+    # Specific tools / companies
     "chatgpt",
     "gpt-4",
     "gpt4",
-    "openai",
+    "gpt-4o",
     "gpt-5",
-    "claude",
+    "openai",
     "anthropic",
-    "gemini",
-    "copilot",
-    "llama",
+    "github copilot",
+
+    # AI in education / policy framing
     "ai literacy",
+    "ai fluency",
     "ai tool",
     "ai-powered",
     "ai-enabled",
@@ -62,6 +70,16 @@ AI_TERMS = [
     "ai in teaching",
     "ai in learning",
     "ai policy",
+    "ai ethics",
+    "ai governance",
+    "responsible ai",
+    "prompt engineering",
+
+    # Data / adjacent
+    "data science",
+    "predictive model",
+
+    "ai",
 ]
 
 LOCATIONS = {
@@ -79,22 +97,20 @@ HEADERS = {
     "Referer": "https://www.jobs.ac.uk/",
 }
 
-
 # =================================================================================
 # CURRENCY PARSING VALUES
 # =================================================================================
 
 RATES_TO_EUR = {
     #   Default values if currency conversion fails.
-    "GBP": 1.19,
-    "CAD": 0.63,
+    "GBP": 1.16,
+    "CAD": 0.62,
     "EUR": 1.00,
-    "USD": 0.93,
-    "NZD": 0.55,
-    "AUD": 0.59,
+    "USD": 0.86,
+    "NZD": 0.51,
+    "AUD": 0.61,
     "CNY": 0.13,
 }
-
 
 # Ordered longest-first so $USD isn't automatically parsed instead of NZ$/AU$/CA$
 CURRENCY_PATTERNS = [

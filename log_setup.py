@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime as dt
+import helper as hp
 
 
 def setup_logger():
@@ -14,6 +15,7 @@ def setup_logger():
     logger.setLevel(logging.INFO)
 
     formatter = logging.Formatter("%(message)s")
+    
 
     fh = logging.FileHandler(filepath)
     fh.setFormatter(formatter)

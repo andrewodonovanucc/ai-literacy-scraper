@@ -13,6 +13,7 @@ import json
 import math
 import os
 import file_handling as fh
+import helper as hp
 
 # =======================================================================================
 # SEARCH PARAMETER VARIABLES
@@ -57,11 +58,12 @@ def menu():
 #   SELECT SEARCH TERM LIST YOU WANT TO USE
 # =======================================================================================
 
-def select_terms_list():
-    opt = menu()
-    while opt not in ("1", "2", "3"):
-        logging.info("PLEASE SELECT A VALID OPTION")
+def select_terms_list(opt=None):
+    if opt is None:
         opt = menu()
+        while opt not in ("1", "2", "3"):
+            logging.info("PLEASE SELECT A VALID OPTION")
+            opt = menu()
 
     logging.info("SELECTED OPTION: " + opt)
     if opt == "1":
@@ -70,7 +72,7 @@ def select_terms_list():
     elif opt == "2":
         logging.info("Chose to Search PhD Studentships.")
         return PHD_SEARCH_TERMS
-    elif opt == "3":
+    else:
         logging.info("Chose to Search Jobs and PhD Studentships.")
         return COMBINED_SEARCH_TERMS
 
@@ -131,16 +133,10 @@ def get_sum_total_results(session, stl):
 #   FETCH ALL RESULTS FROM EACH PAGE
 # =======================================================================================
 
-def fetch_all_pages():
+def fetch_all_pages(opt=None):
     global sum_total_results
 
-    stl = select_terms_list()
-
-    logging.info("=" * 100)
-    logging.info("SLEEPING FOR 1 MINUTE")
-    logging.info("=" * 100)
-    time.sleep(60)
-    logging.info("SLEEP COMPLETE...")
+    stl = select_terms_list(opt)
 
     session = requests.Session()
     session.headers.update(HEADERS)
@@ -156,12 +152,13 @@ def fetch_all_pages():
         for term in stl:
             for code, name in LOCATIONS.items():
                 url = build_search_url(term, code, name)
-                r = session.get(url, timeout=60)
+                r = hp.request_page(session, url, label=f"'{term}' in {name}")
+                if r is None:
+                    progress.update(task, advance=1)
+                    continue
                 soup = bs(r.text, "html.parser")
                 total = get_total_results(soup)
                 logging.info(f"\nSearching: {term} | {code} | Total: {total}")
-                # logging.info(f"\nTotal results for '{term}' in {name}: {total}\n")
-
                 jobs = soup.find_all("div", class_="j-search-result__result")
                 FOUND_JOBS.extend(jobs)
                 progress.update(task, advance=1)
@@ -176,14 +173,17 @@ def fetch_all_pages():
                         + "&startIndex="
                         + str(start_index)
                     )
-                    r = session.get(page_url, timeout=60)
+                    r = hp.request_page(session, page_url, label=f"'{term}' page {start_index // PAGE_SIZE + 1}")
+                    if r is None:
+                        start_index += PAGE_SIZE
+                        progress.update(task, advance=1)
+                        continue
                     soup = bs(r.text, "html.parser")
                     jobs = soup.find_all("div", class_="j-search-result__result")
                     FOUND_JOBS.extend(jobs)
                     start_index += PAGE_SIZE
                     progress.update(task, advance=1)
                     r.close()
-
 
 # =======================================================================================
 #   PUT JOBS IN DICT FORMAT TO BE USED TO WRITE JSON
@@ -254,6 +254,6 @@ def deduplicate():
 #   RUN EVERYTHING
 # =======================================================================================
 
-def init():
-    fetch_all_pages()
+def init(scrape_type=None):
+    fetch_all_pages(scrape_type)
     parse_jobs()

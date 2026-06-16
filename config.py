@@ -76,7 +76,8 @@ AI_TERMS = [
     "prompt engineering",
 
     # Data / adjacent
-    "data science",
+    "prescriptive analysis",
+    "prescriptive analytics"
     "predictive model",
 
     "ai",
@@ -125,3 +126,5 @@ CURRENCY_PATTERNS = [
 ]
 
 REQUEST_DELAY = 1.5
+
+valid_menu_options = ("1", "2", "3", "4", "5", "6", "7", "8", "12", "123", "126", "26", "1236", "24", "246", "46", "1246")

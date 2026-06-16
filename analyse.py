@@ -19,6 +19,10 @@ def get_jobs_from_file():
     INPUT_PATH = os.path.join("data", "filters", INPUT_FILE)
     with open(INPUT_PATH, encoding="utf-8") as json_file:
         JOBS_FROM_JSON = json.load(json_file)
+    # Normalise stored "N/A" discipline strings to None
+    for job in JOBS_FROM_JSON:
+        if job.get("discipline") == "N/A":
+            job["discipline"] = None
     return JOBS_FROM_JSON
 
 
@@ -41,11 +45,12 @@ def menu():
 #   SELECT POSTING TYPE (JOB OR PHD STUDENTSHIP OR BOTH)
 # =======================================================================================
 
-def select_posting_type(data):
-    opt = menu()
-    while opt not in ("1", "2", "3"):
-        logging.info("PLEASE SELECT A VALID OPTION")
+def select_posting_type(data, opt=None):
+    if opt is None:
         opt = menu()
+        while opt not in ("1", "2", "3"):
+            logging.info("PLEASE SELECT A VALID OPTION")
+            opt = menu()
 
     logging.info("SELECTED OPTION: " + opt)
     if opt == "1":
@@ -130,9 +135,9 @@ def output_ai_match(jobs):
         if job['ai_matches'] > 2:
             logging.info(f"{job['ai_matches']:>3} matches | {job['title']}")
 
-def init():
+def init(analyse_type=None):
     jobs = get_jobs_from_file()
-    jobs = select_posting_type(jobs)
+    jobs = select_posting_type(jobs, analyse_type)
 
     logging.info("=" * 100)
     discipline_stats = salary_by_discipline(jobs)

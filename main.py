@@ -5,11 +5,26 @@
 import logging
 import log_setup
 import file_handling as fh
+import helper as hp
+import config
 import scraper, job_details, ai_filter, analyse, app
+import argparse
+import sys
 
 
 # =================================================================================
-#   MENU OF OPTIONA
+#   GIVE THE OPTION TO SKIP THE MENU AND PROVIDE ARGUMENTS DIRECTLY
+# =================================================================================
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="AI Literacy Scraper")
+    parser.add_argument("option", nargs="?", default=None, help="Main menu option (1-8, or combos like 123)")
+    parser.add_argument("scrape_type", nargs="?", default=None, help="Posting type for scraper: 1=Academic, 2=PhD, 3=Both")
+    parser.add_argument("analyse_type", nargs="?", default=None, help="Posting type for analysis: 1=Academic, 2=PhD, 3=Both")
+    return parser.parse_args()
+
+# =================================================================================
+#   MENU OF OPTIONS
 # =================================================================================
 
 def menu():
@@ -30,15 +45,15 @@ def menu():
     return chosen_opt
 
 
-def handle_opts(opt):
-    while opt not in ("1", "2", "3", "4", "5", "6", "7", "8", "12", "123", "126", "26","1236", "24", "246", "46", "1246"):
+def handle_opts(opt, scrape_type, analyse_type):
+    while opt not in config.valid_menu_options:
         logging.info("PLEASE SELECT A VALID OPTION")
         opt = menu()
 
     logging.info("SELECTED OPTION: " + opt)
     if opt == "1":
         logging.info("Chose to run Scraper.")
-        scraper.init()
+        scraper.init(scrape_type)
     elif opt == "2":
         logging.info("Chose to get Job Details.")
         job_details.init()
@@ -47,13 +62,13 @@ def handle_opts(opt):
         ai_filter.init()
     elif opt == "4":
         logging.info("Chose to perform Analysis.")
-        analyse.init()
+        analyse.init(analyse_type)
     elif opt == "5":
         logging.info("Chose to perform All.")
-        scraper.init()
+        scraper.init(scrape_type)
         job_details.init()
         ai_filter.init()
-        analyse.init()
+        analyse.init(analyse_type)
         fh.archive_old_files()
     elif opt == "6":
         logging.info("Chose to Archive old files.")
@@ -70,22 +85,22 @@ def handle_opts(opt):
         job_details.init()
     elif opt == "123":
         logging.info("Chose to perform Scrape, get Job Details and Filter.")
-        scraper.init()
+        scraper.init(scrape_type)
         job_details.init()
         ai_filter.init()
     elif opt == "126":
         logging.info("Chose to perform Scrape, get Job Details and Archive old files.")
-        scraper.init()
+        scraper.init(scrape_type)
         job_details.init()
         fh.archive_old_files()
     elif opt == "24":
         logging.info("Chose to perform get Job Details and Analyse.")
         job_details.init()
-        analyse.init()
+        analyse.init(analyse_type)
     elif opt == "246":
         logging.info("Chose to perform get Job Details, Analyse and Archive old files.")
         job_details.init()
-        analyse.init()
+        analyse.init(analyse_type)
         fh.archive_old_files()
     elif opt == "26":
         logging.info("Chose to perform get Job Details and Archive old files.")
@@ -97,23 +112,25 @@ def handle_opts(opt):
         fh.archive_old_files()
     elif opt == "1236":
         logging.info("Chose to perform Scrape, get Job Details, Filter and Archive old files.")
-        scraper.init()
+        scraper.init(scrape_type)
         job_details.init()
         ai_filter.init()
         fh.archive_old_files()
     elif opt == "1246":
         logging.info("Chose to perform Scrape, get Job Details, Analyse and Archive old files.")
-        scraper.init()
+        scraper.init(scrape_type)
         job_details.init()
-        analyse.init()
+        analyse.init(analyse_type)
         fh.archive_old_files()
         
 
 
 def main():
+    # hp.time_check()
     log_setup.setup_logger()
-    option = menu()
-    handle_opts(option)
+    args = parse_args()
+    opt = args.option or menu()
+    handle_opts(opt, args.scrape_type, args.analyse_type)
 
 if __name__ == "__main__":
     main()

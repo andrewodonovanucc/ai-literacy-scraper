@@ -8,6 +8,7 @@ import time
 import logging
 import json
 import shutil
+import requests
 
 # ======================================================================================
 #   MAKE A FILE WITH THE CURRENT DATE AND TIME
@@ -47,12 +48,15 @@ def get_most_recent_item(folder):
             if modified_time > most_recent_time:
                 most_recent_time = modified_time
                 most_recent_file_name = item.name
-    logging.info("=" * 100)
-    logging.info("Most recent file name: " + most_recent_file_name)
-    logging.info("Most recent file time: " + str(most_recent_time))
-    logging.info("=" * 100)
-
-    return most_recent_file_name
+    
+    if most_recent_file_name:
+        logging.info("=" * 100)
+        logging.info("Most recent file name: " + most_recent_file_name)
+        logging.info("Most recent file time: " + str(most_recent_time))
+        logging.info("=" * 100)
+        return most_recent_file_name
+    else:
+        return None
 
 
 # =================================================================================
@@ -90,3 +94,4 @@ def archive_old_files(folders=None):
         logging.info(f"[{folder}] Archived {moved} file(s). Kept: {most_recent}")
     
     print("Archive complete. Check ../data-backup/")
+

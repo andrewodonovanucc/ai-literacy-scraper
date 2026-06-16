@@ -14,6 +14,7 @@ from rich.progress import Progress
 from bs4 import BeautifulSoup as bs
 import os
 import parse_salary as ps
+import helper as hp
 
 # =================================================================================
 # VARIABLES FOR FILE HANDLING
@@ -27,6 +28,7 @@ INPUT_PATH = None
 # =================================================================================
 
 JOB_POSTING_URLS = []
+JOB_POSTING_TITLES = []
 JOB_DESCRIPTIONS_DIV = []
 JOB_DESCRIPTIONS_TEXT = []
 
@@ -59,6 +61,7 @@ def read_json_to_dict():
 
     for item in jobs:
         JOB_POSTING_URLS.append(item["url"])
+        JOB_POSTING_TITLES.append(item.get("title", ""))
 
 
 # =================================================================================
@@ -73,7 +76,6 @@ def get_jobs_from_file():
         jobs = json.load(json_file)
     return jobs
 
-
 # =================================================================================
 # DO THE SCRAPING - PULL JOB DESCRIPTIONS AND CRITERIA
 # =================================================================================
@@ -84,11 +86,6 @@ def get_job_details():
 
     total = len(JOB_POSTING_URLS)
     logging.info("TOTAL POTENTIAL JOB DESCRIPTIONS AND CRITERIA: " + str(total))
-    logging.info("=" * 100)
-    logging.info("SLEEPING FOR 1 MINUTE")
-    logging.info("=" * 100)
-    time_module.sleep(60)
-    logging.info("SLEEP COMPLETE...")
     logging.info("=" * 100)
     session = requests.Session()
     session.headers.update(HEADERS)
@@ -102,10 +99,20 @@ def get_job_details():
             time_module.sleep(1)
 
             randomised_url = url + f"?_={int(time_module.time())}"
-            r = session.get(randomised_url, timeout=60)
-            if r.status_code != 200:
-                logging.info("Request failed")
+            r = hp.request_page(session, randomised_url, label=f"job {i + 1}")
+            if r is None:
+                # Append N/A placeholders to keep list alignment intact
+                JOB_DESCRIPTIONS_TEXT.append("N/A")
+                JOB_CRITERIA_DIV.append("N/A")
+                LOCATION_DIV.append("N/A")
+                JOB_DISCIPLINE.append("N/A")
+                JOB_IS_PHD.append(False)
+                JOB_POSTING_URLS[i] = None
+                progress.update(task, advance=1)
+                continue
+
             soup = bs(r.text, "html.parser")
+            r.close()
 
             # Remove non-Academic or Research roles
             job_type_inputs = soup.find_all("input", class_="j-form-input__disabled-cat")
@@ -132,6 +139,10 @@ def get_job_details():
             else:
                 JOB_DESCRIPTIONS_TEXT.append("N/A")
                 logging.info(f"\nJOB DESCRIPTION NOT FOUND FOR URL {i + 1}: " + str(url) + "\n")
+
+            title = JOB_POSTING_TITLES[i].lower()
+            jd_text_lower = JOB_DESCRIPTIONS_TEXT[-1].lower()
+            JOB_IS_PHD.append("phd" in title or "phd" in jd_text_lower)
 
             #   JOB CRITERIA
             job_criteria_div = soup.find("div", class_="j-advert-details__container")
@@ -239,9 +250,11 @@ def extract_criteria_fields():
         # Fallback for PhD studentships: criteria table rarely has a Salary: row,
         # but the stipend amount is usually stated in the JD text.
         if raw_salary == "N/A" and i < len(JOB_DESCRIPTIONS_TEXT):
-            jd_snippet, salary_lower, salary_upper = ps.parse_stipend_from_jd(JOB_DESCRIPTIONS_TEXT[i])
+            jd_snippet, stipend_lower, stipend_upper = ps.parse_stipend_from_jd(JOB_DESCRIPTIONS_TEXT[i])
             if jd_snippet:
                 raw_salary = jd_snippet
+                salary_lower = stipend_lower
+                salary_upper = stipend_upper
 
 
         JOB_SALARY_STRING.append(raw_salary)
@@ -252,7 +265,6 @@ def extract_criteria_fields():
         JOB_DATE_POSTED.append(date_posted)
         JOB_DATE_CLOSES.append(date_closes)
 
-    is_phd_role()
     is_closed_role()
     extract_fte()
 
@@ -286,23 +298,6 @@ def parse_date(date_str):
     except ValueError:
         logging.info(f"DATE PARSING FAILED FOR: {date_str}")
         return "N/A"
-
-
-# =================================================================================
-# Check if the job is a PhD role by looking for "PhD" in the title or description.
-# =================================================================================
-
-def is_phd_role():
-    jobs = get_jobs_from_file()
-    jobs = [job for job in jobs if job.get("url") in JOB_POSTING_URLS]
-    for job in jobs:
-        title = job.get("title", "").lower()
-        description = job.get("jd_text", "").lower()
-        if "phd" in title or "phd" in description:
-            JOB_IS_PHD.append(True)
-        else:
-            JOB_IS_PHD.append(False)
-
 
 # =================================================================================
 # Check if the job posting is closed.

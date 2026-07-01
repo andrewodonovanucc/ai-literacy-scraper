@@ -8,29 +8,70 @@ UNPARSEABLE = {"n/a", "not specified", "competitive", "per hour"}
 min_stipend = 15_000
 max_stipend = 40_000
 _STIPEND_KEYWORDS = [
-    "stipend", "ukri", "maintenance", "per year", "per annum", "annually",
-    "tax-free", "tax free",
+    "stipend",
+    "ukri",
+    "maintenance",
+    "per year",
+    "per annum",
+    "annually",
+    "tax-free",
+    "tax free",
 ]
 
 # --- LinkedIn jd_text salary parsing -------------------------------------
 _LI_CUR_SYMBOLS = {"£": "GBP", "€": "EUR", "$": "USD"}
 
 _LI_MONTHLY_KEYWORDS = [
-    "per month", "/month", "p/m", "per maand", "por mes", "al mese",
-    "per mese", "mensile", "maandelijks", "brut mensuel", "netto",
-    "por mês", "ao mês", "meses)",  # PT/BR "14 meses" annual bonus months, excluded below
+    "per month",
+    "/month",
+    "p/m",
+    "per maand",
+    "por mes",
+    "al mese",
+    "per mese",
+    "mensile",
+    "maandelijks",
+    "brut mensuel",
+    "netto",
+    "por mês",
+    "ao mês",
+    "meses)",  # PT/BR "14 meses" annual bonus months, excluded below
 ]
 _LI_ANNUAL_KEYWORDS = [
-    "per annum", "per year", "annuel", "annum", "brut annuel", "gross per year",
-    "jaarsalaris", "annuo", "anual", "annual",
+    "per annum",
+    "per year",
+    "annuel",
+    "annum",
+    "brut annuel",
+    "gross per year",
+    "jaarsalaris",
+    "annuo",
+    "anual",
+    "annual",
 ]
 _LI_SALARY_KEYWORDS = [
-    "salary", "compensation", "pay range", "remuneration", "package", "wage",
-    "salaire", "rémunération", "fourchette",
-    "salario", "sueldo", "retribución",
-    "salário", "salarial", "remuneração", "pacote salarial",
-    "retributiv", "stipendio", "compenso", "ral",
-    "gehalt", "vergütung",
+    "salary",
+    "compensation",
+    "pay range",
+    "remuneration",
+    "package",
+    "wage",
+    "salaire",
+    "rémunération",
+    "fourchette",
+    "salario",
+    "sueldo",
+    "retribución",
+    "salário",
+    "salarial",
+    "remuneração",
+    "pacote salarial",
+    "retributiv",
+    "stipendio",
+    "compenso",
+    "ral",
+    "gehalt",
+    "vergütung",
     "salaris",
 ]
 
@@ -63,7 +104,7 @@ def _extract_amounts(salary_str):
     results = []
     for sym_pattern, code in CURRENCY_PATTERNS:
         for m in re.finditer(sym_pattern, salary_str, re.IGNORECASE):
-            remainder = salary_str[m.end():]
+            remainder = salary_str[m.end() :]
             # Allow optional whitespace inside the number (e.g. "£21, 805")
             num_match = re.match(r"\s*([\d,\s]+(?:\.\d+)?)", remainder)
             if num_match:
@@ -162,7 +203,7 @@ def _li_parse_number(raw, k_suffix):
 
 
 def _li_has_salary_context(jd_text, start, end):
-    window = jd_text[max(0, start - 90): end + 20].lower()
+    window = jd_text[max(0, start - 90) : end + 20].lower()
     return any(kw in window for kw in _LI_SALARY_KEYWORDS)
 
 
@@ -173,7 +214,12 @@ def parse_salary_linkedin(jd_text):
     candidates = []  # (score, -start, lower, upper, currency)
 
     for m in _LI_PAIR_RE.finditer(jd_text):
-        sym = m.group("v1_sym_pre") or m.group("v1_sym_post") or m.group("v2_sym_pre") or m.group("v2_sym_post")
+        sym = (
+            m.group("v1_sym_pre")
+            or m.group("v1_sym_post")
+            or m.group("v2_sym_pre")
+            or m.group("v2_sym_post")
+        )
         if not sym:
             continue
         v1 = _li_parse_number(m.group("v1_num"), m.group("v1_k"))
@@ -184,7 +230,12 @@ def parse_salary_linkedin(jd_text):
         if bool(m.group("v1_k")) != bool(m.group("v2_k")):
             base1 = _li_parse_number(m.group("v1_num"), None)
             base2 = _li_parse_number(m.group("v2_num"), None)
-            if base1 is not None and base2 is not None and base1 < 1000 and base2 < 1000:
+            if (
+                base1 is not None
+                and base2 is not None
+                and base1 < 1000
+                and base2 < 1000
+            ):
                 if m.group("v2_k") and not m.group("v1_k"):
                     v1 = base1 * 1000
                 elif m.group("v1_k") and not m.group("v2_k"):
@@ -201,8 +252,11 @@ def parse_salary_linkedin(jd_text):
         if lower < 1000 and not has_context:
             continue
         currency = _LI_CUR_SYMBOLS.get(sym, "EUR")
-        context = jd_text[max(0, m.start() - 5): m.end() + 25].lower()
-        is_monthly = any(kw in context for kw in _LI_MONTHLY_KEYWORDS) and "meses)" not in context
+        context = jd_text[max(0, m.start() - 5) : m.end() + 25].lower()
+        is_monthly = (
+            any(kw in context for kw in _LI_MONTHLY_KEYWORDS)
+            and "meses)" not in context
+        )
         # unlabeled figures under ~4,000 are implausible as an annual professional
         # salary in EUR/GBP -- treat as monthly (common in NL/PT/IT/DE postings)
         if not is_monthly and currency in ("EUR", "GBP") and lower < 4000:
@@ -225,7 +279,7 @@ def parse_salary_linkedin(jd_text):
                 continue
             sym = m.group("sym_pre") or m.group("sym_post")
             currency = _LI_CUR_SYMBOLS.get(sym, "EUR")
-            context = jd_text[max(0, m.start() - 5): m.end() + 25].lower()
+            context = jd_text[max(0, m.start() - 5) : m.end() + 25].lower()
             is_monthly = any(kw in context for kw in _LI_MONTHLY_KEYWORDS)
             if not is_monthly and currency in ("EUR", "GBP") and val < 4000:
                 is_monthly = True

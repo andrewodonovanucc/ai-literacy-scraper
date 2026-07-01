@@ -15,7 +15,6 @@ def setup_logger():
     logger.setLevel(logging.INFO)
 
     formatter = logging.Formatter("%(message)s")
-    
 
     fh = logging.FileHandler(filepath, encoding="utf-8")
     fh.setFormatter(formatter)

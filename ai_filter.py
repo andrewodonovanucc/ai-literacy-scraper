@@ -41,6 +41,7 @@ def load_combined_and_linkedin():
 #   READ JOB DESCRIPTIONS FROM COMBINED CRITERIA ONLY
 # =================================================================================
 
+
 def read_job_descs():
     global ALL_JOBS
     ALL_JOBS = load_combined_and_linkedin()
@@ -50,9 +51,11 @@ def read_job_descs():
         JOB_DESCRIPTIONS.append(text)
         JOB_DESCRIPTIONS_LOWER.append(text.lower())
 
+
 # =================================================================================
 #   MAKE THE REGEX PATTERN
 # =================================================================================
+
 
 def make_regex():
     for term in AI_TERMS:

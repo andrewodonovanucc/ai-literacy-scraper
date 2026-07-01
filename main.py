@@ -10,9 +10,24 @@ import sys
 
 def parse_args():
     parser = argparse.ArgumentParser(description="AI Literacy Scraper")
-    parser.add_argument("option", nargs="?", default=None, help="Main menu option (1-9, 0, c, or combos)")
-    parser.add_argument("scrape_type", nargs="?", default=None, help="Posting type for scraper: 1=Academic, 2=PhD, 3=Both")
-    parser.add_argument("analyse_type", nargs="?", default=None, help="Posting type for analysis: 1=Academic, 2=PhD, 3=LinkedIn, 4=All")
+    parser.add_argument(
+        "option",
+        nargs="?",
+        default=None,
+        help="Main menu option (1-9, 0, c, or combos)",
+    )
+    parser.add_argument(
+        "scrape_type",
+        nargs="?",
+        default=None,
+        help="Posting type for scraper: 1=Academic, 2=PhD, 3=Both",
+    )
+    parser.add_argument(
+        "analyse_type",
+        nargs="?",
+        default=None,
+        help="Posting type for analysis: 1=Academic, 2=PhD, 3=LinkedIn, 4=All",
+    )
     return parser.parse_args()
 
 
@@ -34,6 +49,7 @@ def menu():
     chosen_opt = input("Input Choice: ")
     logging.info("=" * 100)
     return chosen_opt
+
 
 def handle_opts(opt, scrape_type, analyse_type):
     while opt not in config.valid_menu_options:
@@ -109,13 +125,17 @@ def handle_opts(opt, scrape_type, analyse_type):
         analyse.init(analyse_type)
         fh.archive_old_files()
     elif opt == "1236":
-        logging.info("Chose to perform Scrape, get Job Details, Filter and Archive old files.")
+        logging.info(
+            "Chose to perform Scrape, get Job Details, Filter and Archive old files."
+        )
         scraper.init(scrape_type)
         job_details.init()
         ai_filter.init()
         fh.archive_old_files()
     elif opt == "1246":
-        logging.info("Chose to perform Scrape, get Job Details, Analyse and Archive old files.")
+        logging.info(
+            "Chose to perform Scrape, get Job Details, Analyse and Archive old files."
+        )
         scraper.init(scrape_type)
         job_details.init()
         analyse.init(analyse_type)
@@ -125,12 +145,16 @@ def handle_opts(opt, scrape_type, analyse_type):
         scraper_linkedin.init()
         job_details_linkedin.init()
     elif opt == "893":
-        logging.info("Chose to run LinkedIn Scraper, get LinkedIn Job Details and Filter.")
+        logging.info(
+            "Chose to run LinkedIn Scraper, get LinkedIn Job Details and Filter."
+        )
         scraper_linkedin.init()
         job_details_linkedin.init()
         ai_filter.init()
     elif opt == "8934":
-        logging.info("Chose to run LinkedIn Scraper, get LinkedIn Job Details, Filter and Analyse.")
+        logging.info(
+            "Chose to run LinkedIn Scraper, get LinkedIn Job Details, Filter and Analyse."
+        )
         scraper_linkedin.init()
         job_details_linkedin.init()
         ai_filter.init()
@@ -140,18 +164,24 @@ def handle_opts(opt, scrape_type, analyse_type):
         scraper_linkedin.init()
         fh.archive_old_files()
     elif opt == "896":
-        logging.info("Chose to run LinkedIn Scraper, get LinkedIn Job Details and Archive old files.")
+        logging.info(
+            "Chose to run LinkedIn Scraper, get LinkedIn Job Details and Archive old files."
+        )
         scraper_linkedin.init()
         job_details_linkedin.init()
         fh.archive_old_files()
     elif opt == "8936":
-        logging.info("Chose to run LinkedIn Scraper, get LinkedIn Job Details, Filter and Archive old files.")
+        logging.info(
+            "Chose to run LinkedIn Scraper, get LinkedIn Job Details, Filter and Archive old files."
+        )
         scraper_linkedin.init()
         job_details_linkedin.init()
         ai_filter.init()
         fh.archive_old_files()
     elif opt == "89346":
-        logging.info("Chose to run LinkedIn Scraper, get LinkedIn Job Details, Filter, Analyse and Archive old files.")
+        logging.info(
+            "Chose to run LinkedIn Scraper, get LinkedIn Job Details, Filter, Analyse and Archive old files."
+        )
         scraper_linkedin.init()
         job_details_linkedin.init()
         ai_filter.init()
@@ -167,17 +197,21 @@ def handle_opts(opt, scrape_type, analyse_type):
         ai_filter.init()
         fh.archive_old_files()
     elif opt == "9346":
-        logging.info("Chose to get LinkedIn Job Details, Filter, Analyse and Archive old files.")
+        logging.info(
+            "Chose to get LinkedIn Job Details, Filter, Analyse and Archive old files."
+        )
         job_details_linkedin.init()
         ai_filter.init()
         analyse.init(analyse_type)
         fh.archive_old_files()
+
 
 def main():
     log_setup.setup_logger()
     args = parse_args()
     opt = args.option or menu()
     handle_opts(opt, args.scrape_type, args.analyse_type)
+
 
 if __name__ == "__main__":
     main()

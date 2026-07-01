@@ -13,6 +13,7 @@ JOBS_FROM_JSON = []
 # LOAD THE JOBS FROM THE MOST RECENT CRITERIA FILE
 # =================================================================================
 
+
 def get_jobs_from_file():
     global JOBS_FROM_JSON, INPUT_FILE, INPUT_PATH
     INPUT_FILE = fh.get_most_recent_item("combined_criteria")
@@ -45,6 +46,7 @@ def get_jobs_from_file():
 
     return JOBS_FROM_JSON
 
+
 # =======================================================================================
 #   MENU TO SELECT SEARCH TERMS
 # =======================================================================================
@@ -61,9 +63,11 @@ def menu():
     logging.info("=" * 100)
     return chosen_opt
 
+
 # =======================================================================================
 #   SELECT POSTING TYPE
 # =======================================================================================
+
 
 def select_posting_type(data, opt=None):
     if opt is None:
@@ -75,10 +79,18 @@ def select_posting_type(data, opt=None):
     logging.info("SELECTED OPTION: " + opt)
     if opt == "1":
         logging.info("SELECTED TO ANALYSE ACADEMIC JOBS")
-        return [job for job in data if job.get("source") == "jobs.ac.uk" and not job.get("is_phd")]
+        return [
+            job
+            for job in data
+            if job.get("source") == "jobs.ac.uk" and not job.get("is_phd")
+        ]
     elif opt == "2":
         logging.info("SELECTED TO ANALYSE PHD STUDENTSHIPS")
-        return [job for job in data if job.get("source") == "jobs.ac.uk" and job.get("is_phd")]
+        return [
+            job
+            for job in data
+            if job.get("source") == "jobs.ac.uk" and job.get("is_phd")
+        ]
     elif opt == "3":
         logging.info("SELECTED TO ANALYSE LINKEDIN JOBS")
         return [job for job in data if job.get("source") == "linkedin"]
@@ -91,15 +103,22 @@ def select_posting_type(data, opt=None):
 # SORT / ANALYSE FUNCTIONS
 # =================================================================================
 
+
 def sort_by_ai_matches(data, descending=True):
     return sorted(data, key=lambda job: job.get("ai_matches", 0), reverse=descending)
+
 
 def sort_by_salary(data, descending=True):
     return sorted(
         data,
-        key=lambda job: (job["salary_lower"] if job.get("salary_lower") is not None else float("-inf")),
+        key=lambda job: (
+            job["salary_lower"]
+            if job.get("salary_lower") is not None
+            else float("-inf")
+        ),
         reverse=descending,
     )
+
 
 def salary_by_discipline(data):
     discipline_salaries = {}
@@ -128,6 +147,7 @@ def salary_by_discipline(data):
         }
     return dict(sorted(results.items(), key=lambda x: -x[1]["mean"]))
 
+
 def ai_matches_by_discipline(data):
     discipline_matches = {}
 
@@ -143,10 +163,13 @@ def ai_matches_by_discipline(data):
             "total_matches": sum(match_list),
             "avg_matches": round(sum(match_list) / len(match_list), 2),
             "roles_with_ai": sum(1 for m in match_list if m > 0),
-            "pct_with_ai": round(sum(1 for m in match_list if m > 0) / len(match_list) * 100, 1),
+            "pct_with_ai": round(
+                sum(1 for m in match_list if m > 0) / len(match_list) * 100, 1
+            ),
         }
 
     return dict(sorted(results.items(), key=lambda x: -x[1]["total_matches"]))
+
 
 def output_salary(jobs):
     sorted_jobs = sort_by_salary(jobs)
@@ -154,11 +177,13 @@ def output_salary(jobs):
         if job.get("salary_lower") is not None and job["salary_lower"] > 10000:
             logging.info(f"{job['salary_lower']:>10} EUR | {job['title']}")
 
+
 def output_ai_match(jobs):
     sorted_jobs = sort_by_ai_matches(jobs)
     for job in sorted_jobs:
         if job.get("ai_matches", 0) > 2:
             logging.info(f"{job['ai_matches']:>3} matches | {job['title']}")
+
 
 def init(analyse_type=None):
     jobs = get_jobs_from_file()
@@ -168,7 +193,9 @@ def init(analyse_type=None):
     discipline_stats = salary_by_discipline(jobs)
     logging.info("=" * 100)
     logging.info("SALARY BY DISCIPLINE (EUR, salary_lower, 10k-200k only):")
-    logging.info(f"{'Discipline':<45} {'N':>5} {'Mean':>10} {'Median':>10} {'Mode':>10}")
+    logging.info(
+        f"{'Discipline':<45} {'N':>5} {'Mean':>10} {'Median':>10} {'Mode':>10}"
+    )
     logging.info("-" * 85)
     for disc, stats in discipline_stats.items():
         if stats["n"] > 3:
@@ -180,7 +207,9 @@ def init(analyse_type=None):
     ai_stats = ai_matches_by_discipline(jobs)
     logging.info("=" * 100)
     logging.info("AI MATCHES BY DISCIPLINE:")
-    logging.info(f"{'Discipline':<45} {'N':>5} {'Total':>7} {'Avg':>7} {'w/ AI':>7} {'%':>7}")
+    logging.info(
+        f"{'Discipline':<45} {'N':>5} {'Total':>7} {'Avg':>7} {'w/ AI':>7} {'%':>7}"
+    )
     logging.info("-" * 85)
     for disc, stats in ai_stats.items():
         if stats["n"] > 3:

@@ -11,6 +11,7 @@ import logging
 # LOAD AND PREPARE DATA
 # =================================================================================
 
+
 @st.cache_data
 def load_jobs():
     INPUT_FILE = fh.get_most_recent_item("filters")
@@ -34,7 +35,9 @@ def filter_by_type(jobs, opt):
 
 def jobs_to_df(jobs):
     df = pd.DataFrame(jobs)
-    drop_cols = [c for c in ["jd_text", "salary_text", "ai_sentences"] if c in df.columns]
+    drop_cols = [
+        c for c in ["jd_text", "salary_text", "ai_sentences"] if c in df.columns
+    ]
     df.drop(columns=drop_cols, inplace=True)
     return df
 
@@ -43,12 +46,19 @@ def jobs_to_df(jobs):
 # CHART HELPERS
 # =================================================================================
 
+
 def salary_chart(jobs):
     stats = analyse.salary_by_discipline(jobs)
     # Only disciplines with n > 3
     rows = [
-        {"Discipline": disc, "Mean (EUR)": s["mean"], "Median (EUR)": s["median"], "N": s["n"]}
-        for disc, s in stats.items() if s["n"] > 3
+        {
+            "Discipline": disc,
+            "Mean (EUR)": s["mean"],
+            "Median (EUR)": s["median"],
+            "N": s["n"],
+        }
+        for disc, s in stats.items()
+        if s["n"] > 3
     ]
     if not rows:
         st.info("Not enough data to display salary chart.")
@@ -79,8 +89,7 @@ def ai_chart(jobs):
 def ai_pie_charts(jobs):
     stats = analyse.ai_matches_by_discipline(jobs)
     disciplines = [
-        (disc, s) for disc, s in stats.items()
-        if s["n"] > 3 and disc != "N/A"
+        (disc, s) for disc, s in stats.items() if s["n"] > 3 and disc != "N/A"
     ]
     if not disciplines:
         st.info("Not enough data to display pie charts.")
@@ -111,6 +120,7 @@ def ai_pie_charts(jobs):
 # TABLE HELPERS
 # =================================================================================
 
+
 def salary_table(jobs):
     stats = analyse.salary_by_discipline(jobs)
     rows = [
@@ -121,7 +131,8 @@ def salary_table(jobs):
             "Median (EUR)": f"{s['median']:,}",
             "Mode (EUR)": str(s["mode"]),
         }
-        for disc, s in stats.items() if s["n"] > 3
+        for disc, s in stats.items()
+        if s["n"] > 3
     ]
     if not rows:
         st.info("Not enough salary data.")
@@ -153,6 +164,7 @@ def ai_table(jobs):
 # PAGE
 # =================================================================================
 
+
 def build_page():
     st.set_page_config(layout="wide", page_title="AI Literacy Job Analysis")
     st.title("AI Literacy in Academic Job Postings")
@@ -171,7 +183,9 @@ def build_page():
     filtered = filter_by_type(jobs, posting_type)
     st.caption(f"Showing **{len(filtered)}** postings ({posting_type})")
 
-    tab_salary, tab_ai, tab_jobs = st.tabs(["Salary by Discipline", "AI Matches by Discipline", "All Postings"])
+    tab_salary, tab_ai, tab_jobs = st.tabs(
+        ["Salary by Discipline", "AI Matches by Discipline", "All Postings"]
+    )
 
     with tab_salary:
         st.subheader("Mean & Median Salary by Discipline (EUR)")
@@ -194,7 +208,9 @@ def build_page():
         if "url" in df.columns:
             st.dataframe(
                 df,
-                column_config={"url": st.column_config.LinkColumn("URL", display_text="View")},
+                column_config={
+                    "url": st.column_config.LinkColumn("URL", display_text="View")
+                },
                 hide_index=True,
                 use_container_width=True,
             )
@@ -205,6 +221,7 @@ def build_page():
 # =================================================================================
 # ENTRY POINT
 # =================================================================================
+
 
 def init():
     build_page()

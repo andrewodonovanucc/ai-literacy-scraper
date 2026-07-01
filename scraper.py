@@ -8,7 +8,14 @@ import logging
 from datetime import datetime as dt
 from bs4 import BeautifulSoup as bs
 from rich.progress import Progress
-from config import JOB_SEARCH_TERMS, PHD_SEARCH_TERMS, COMBINED_SEARCH_TERMS, REQUEST_DELAY, LOCATIONS, HEADERS
+from config import (
+    JOB_SEARCH_TERMS,
+    PHD_SEARCH_TERMS,
+    COMBINED_SEARCH_TERMS,
+    REQUEST_DELAY,
+    LOCATIONS,
+    HEADERS,
+)
 import json
 import math
 import os
@@ -41,10 +48,11 @@ PARSED_JOBS = []
 
 sum_total_results = 0
 
+
 # =======================================================================================
 #   MENU TO SELECT SEARCH TERMS
 # =======================================================================================
-def menu():    
+def menu():
     logging.info("=" * 100)
     logging.info("  SELECT AN OPTION:   ")
     logging.info("=" * 100)
@@ -56,9 +64,11 @@ def menu():
     logging.info("=" * 100)
     return chosen_opt
 
+
 # =======================================================================================
 #   SELECT SEARCH TERM LIST YOU WANT TO USE
 # =======================================================================================
+
 
 def select_terms_list(opt=None):
     if opt is None:
@@ -78,6 +88,7 @@ def select_terms_list(opt=None):
         logging.info("Chose to Search Jobs and PhD Studentships.")
         return COMBINED_SEARCH_TERMS
 
+
 # =======================================================================================
 #   COUNTS THE TOTAL RESULTS PER SEARCH TERM (25/PAGE)
 # =======================================================================================
@@ -96,6 +107,7 @@ def get_total_results(soup):
 #   REPLACE SPACES WITH "+" SIGN IN THE URL
 # =======================================================================================
 
+
 def fix_url(url):
     url = url.replace(" ", "+")
     return url
@@ -105,6 +117,7 @@ def fix_url(url):
 #   BUILD SEARCH URL FOR A GIVEN TERM AND LOCATION
 # =======================================================================================
 
+
 def build_search_url(term, country_code, country_name):
     location_param = f"&country%5B%5D={fix_url(country_name)}&country%5B%5D={country_code}&location={fix_url(country_name)}"
     return BASE_SEARCH_URL + fix_url(term) + location_param + f"&_={int(time.time())}"
@@ -113,6 +126,7 @@ def build_search_url(term, country_code, country_name):
 # =======================================================================================
 #   COUNTS THE OVERALL RESULTS FOR JOB LISTINGS
 # =======================================================================================
+
 
 def get_sum_total_results(session, stl):
     global sum_total_results
@@ -134,6 +148,7 @@ def get_sum_total_results(session, stl):
 # =======================================================================================
 #   FETCH ALL RESULTS FROM EACH PAGE
 # =======================================================================================
+
 
 def fetch_all_pages(opt=None):
     global sum_total_results
@@ -175,7 +190,11 @@ def fetch_all_pages(opt=None):
                         + "&startIndex="
                         + str(start_index)
                     )
-                    r = hp.request_page(session, page_url, label=f"'{term}' page {start_index // PAGE_SIZE + 1}")
+                    r = hp.request_page(
+                        session,
+                        page_url,
+                        label=f"'{term}' page {start_index // PAGE_SIZE + 1}",
+                    )
                     if r is None:
                         start_index += PAGE_SIZE
                         progress.update(task, advance=1)
@@ -186,6 +205,7 @@ def fetch_all_pages(opt=None):
                     start_index += PAGE_SIZE
                     progress.update(task, advance=1)
                     r.close()
+
 
 # =======================================================================================
 #   PUT JOBS IN DICT FORMAT TO BE USED TO WRITE JSON
@@ -255,6 +275,7 @@ def deduplicate():
 # =======================================================================================
 #   RUN EVERYTHING
 # =======================================================================================
+
 
 def init(scrape_type=None):
     fetch_all_pages(scrape_type)

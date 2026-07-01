@@ -9,6 +9,7 @@ from datetime import timedelta as td
 # REQUEST HELPER
 # =================================================================================
 
+
 def request_page(session, url, label=""):
     try:
         r = session.get(url, timeout=60)
@@ -24,7 +25,8 @@ def request_page(session, url, label=""):
     except requests.exceptions.RequestException as e:
         logging.warning(f"Request error for {label or url}: {e}")
         return None
-    
+
+
 def time_check():
     mrr = fh.get_most_recent_item("runs")
 
@@ -51,4 +53,3 @@ def time_check():
         time.sleep(10)
         logging.info("SLEEP COMPLETE...")
         logging.info("=" * 100)
-    

@@ -76,9 +76,11 @@ def get_jobs_from_file():
         jobs = json.load(json_file)
     return jobs
 
+
 # =================================================================================
 # DO THE SCRAPING - PULL JOB DESCRIPTIONS AND CRITERIA
 # =================================================================================
+
 
 def get_job_details():
     logging.info("=" * 100)
@@ -115,10 +117,14 @@ def get_job_details():
             r.close()
 
             # Remove non-Academic or Research roles
-            job_type_inputs = soup.find_all("input", class_="j-form-input__disabled-cat")
+            job_type_inputs = soup.find_all(
+                "input", class_="j-form-input__disabled-cat"
+            )
             job_types = [inp.get("value", "") for inp in job_type_inputs]
             if "Academic or Research" not in job_types:
-                logging.info(f"\nSKIPPED (not Academic or Research) URL {i + 1}: {url}\n")
+                logging.info(
+                    f"\nSKIPPED (not Academic or Research) URL {i + 1}: {url}\n"
+                )
                 JOB_POSTING_URLS[i] = None
                 progress.update(task, advance=1)
                 r.close()
@@ -138,7 +144,9 @@ def get_job_details():
                 JOB_DESCRIPTIONS_TEXT.append(alt_jd_text)
             else:
                 JOB_DESCRIPTIONS_TEXT.append("N/A")
-                logging.info(f"\nJOB DESCRIPTION NOT FOUND FOR URL {i + 1}: " + str(url) + "\n")
+                logging.info(
+                    f"\nJOB DESCRIPTION NOT FOUND FOR URL {i + 1}: " + str(url) + "\n"
+                )
 
             title = JOB_POSTING_TITLES[i].lower()
             jd_text_lower = JOB_DESCRIPTIONS_TEXT[-1].lower()
@@ -156,7 +164,9 @@ def get_job_details():
                 JOB_CRITERIA_DIV.append(alt_job_criteria_div)
             else:
                 JOB_CRITERIA_DIV.append("N/A")
-                logging.info(f"\nJOB CRITERIA NOT FOUND FOR URL {i + 1}: " + str(url) + "\n")
+                logging.info(
+                    f"\nJOB CRITERIA NOT FOUND FOR URL {i + 1}: " + str(url) + "\n"
+                )
 
             # LOCATION
             location = "N/A"
@@ -164,17 +174,30 @@ def get_job_details():
                 if "Location(s):" in p.get_text():
                     parent = p.find_parent("div")
                     if parent:
-                        loc_input = parent.find("input", class_="j-form-input__disabled-cat")
+                        loc_input = parent.find(
+                            "input", class_="j-form-input__disabled-cat"
+                        )
                         if loc_input:
                             location = loc_input.get("value", "N/A")
                     break
 
-            if any(region in location for region in ("England", "Scotland", "Wales", "Northern Ireland", "London")):
+            if any(
+                region in location
+                for region in (
+                    "England",
+                    "Scotland",
+                    "Wales",
+                    "Northern Ireland",
+                    "London",
+                )
+            ):
                 LOCATION_DIV.append("UK")
             elif "Ireland" in location:
                 LOCATION_DIV.append("IE")
             else:
-                logging.info(f"\nLOCATION NOT RECOGNISED for URL {i + 1}: {url}, APPENDED AS {location}\n")
+                logging.info(
+                    f"\nLOCATION NOT RECOGNISED for URL {i + 1}: {url}, APPENDED AS {location}\n"
+                )
                 LOCATION_DIV.append(str(location))
 
             discipline = "N/A"
@@ -200,9 +223,11 @@ def get_job_details():
     export_job_descriptions()
     export_criteria()
 
+
 # =================================================================================
 # EXTRACT THE JOB CRITERIA FIELDS FROM THE HTML TABLE STRUCTURE
 # =================================================================================
+
 
 def extract_criteria_fields():
     for i, div in enumerate(JOB_CRITERIA_DIV):
@@ -236,7 +261,7 @@ def extract_criteria_fields():
             value = td.get_text(separator=" ", strip=True)
 
             if header == "Salary:":
-                raw_salary = ' '.join(value.split())
+                raw_salary = " ".join(value.split())
                 salary_lower, salary_upper = ps.parse_salary_bounds(raw_salary)
             elif header == "Hours:":
                 hours = value
@@ -250,12 +275,13 @@ def extract_criteria_fields():
         # Fallback for PhD studentships: criteria table rarely has a Salary: row,
         # but the stipend amount is usually stated in the JD text.
         if raw_salary == "N/A" and i < len(JOB_DESCRIPTIONS_TEXT):
-            jd_snippet, stipend_lower, stipend_upper = ps.parse_stipend_from_jd(JOB_DESCRIPTIONS_TEXT[i])
+            jd_snippet, stipend_lower, stipend_upper = ps.parse_stipend_from_jd(
+                JOB_DESCRIPTIONS_TEXT[i]
+            )
             if jd_snippet:
                 raw_salary = jd_snippet
                 salary_lower = stipend_lower
                 salary_upper = stipend_upper
-
 
         JOB_SALARY_STRING.append(raw_salary)
         JOB_SALARY_LOWER.append(salary_lower)
@@ -275,6 +301,7 @@ def extract_criteria_fields():
 # EXTRACT FTE VALUE FROM JOB DESCRIPTION TEXT
 # =================================================================================
 
+
 def extract_fte():
     pattern = re.compile(r"\d\.\d\s*FTE")
     for txt in JOB_DESCRIPTIONS_TEXT:
@@ -287,21 +314,25 @@ def extract_fte():
             else:
                 JOB_FTE_VALUE.append("1.0 FTE")
 
+
 # =================================================================================
 # Parse the date strings to YYYY-MM-DD and handle ordinal suffixes.
 # =================================================================================
 
+
 def parse_date(date_str):
-    cleaned = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_str)
+    cleaned = re.sub(r"(\d+)(st|nd|rd|th)", r"\1", date_str)
     try:
         return dt.strptime(cleaned, "%d %B %Y").strftime("%Y-%m-%d")
     except ValueError:
         logging.info(f"DATE PARSING FAILED FOR: {date_str}")
         return "N/A"
 
+
 # =================================================================================
 # Check if the job posting is closed.
 # =================================================================================
+
 
 def is_closed_role():
     for date in JOB_DATE_CLOSES:
@@ -318,6 +349,7 @@ def is_closed_role():
 # EXPORT THE JOB DESCRIPTIONS TO JSON IN JD FOLDER.
 # =================================================================================
 
+
 def export_job_descriptions():
     global INPUT_PATH, INPUT_FILE
     logging.info("EXPORTING JOB DESCRIPTIONS...")
@@ -326,7 +358,9 @@ def export_job_descriptions():
     jobs = get_jobs_from_file()
 
     for i, job in enumerate(jobs):
-        job["jd_text"] = JOB_DESCRIPTIONS_TEXT[i] if i < len(JOB_DESCRIPTIONS_TEXT) else "N/A"
+        job["jd_text"] = (
+            JOB_DESCRIPTIONS_TEXT[i] if i < len(JOB_DESCRIPTIONS_TEXT) else "N/A"
+        )
 
     fh.write_file("jd", jobs)
     logging.info("=" * 100)
@@ -338,6 +372,7 @@ def export_job_descriptions():
 # EXPORT THE JOB DETAILS TO JSON IN CRITERIA FOLDER.
 # =================================================================================
 
+
 def export_criteria():
     logging.info("=" * 100)
     logging.info("EXPORTING CRITERIA...")
@@ -348,7 +383,9 @@ def export_criteria():
         jobs = json.load(json_file)
 
     for i, job in enumerate(jobs):
-        job["salary_text"] = JOB_SALARY_STRING[i] if i < len(JOB_SALARY_STRING) else "N/A"
+        job["salary_text"] = (
+            JOB_SALARY_STRING[i] if i < len(JOB_SALARY_STRING) else "N/A"
+        )
         job["salary_lower"] = JOB_SALARY_LOWER[i] if i < len(JOB_SALARY_LOWER) else None
         job["salary_upper"] = JOB_SALARY_UPPER[i] if i < len(JOB_SALARY_UPPER) else None
         job["hours"] = JOB_HOURS[i] if i < len(JOB_HOURS) else "N/A"
@@ -372,13 +409,16 @@ def export_criteria():
     logging.info(f"Saved {len(jobs)} total criteria.")
     logging.info(f"  Academic: {len(academic)}")
     logging.info(f"  PhD Studentships: {len(phd)}")
-    logging.info(f"{JOB_IS_CLOSED.count(True)} closed roles out of {len(jobs)} identified.")
+    logging.info(
+        f"{JOB_IS_CLOSED.count(True)} closed roles out of {len(jobs)} identified."
+    )
     logging.info("=" * 100)
 
 
 # ======================================================================================
 # RUN EVERYTHING
 # ======================================================================================
+
 
 def init():
     global INPUT_FILE, INPUT_PATH

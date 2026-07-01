@@ -7,14 +7,10 @@ JOB_SEARCH_TERMS = [
     "Dean",
     "Head of Department",
     "Chair",
-    "Reader"
+    "Reader",
 ]
 
-PHD_SEARCH_TERMS = [
-    "Research Associate",
-    "Research Fellow",
-    "Postdoctoral"
-]
+PHD_SEARCH_TERMS = ["Research Associate", "Research Fellow", "Postdoctoral"]
 
 COMBINED_SEARCH_TERMS = [
     "Lecturer",
@@ -28,7 +24,7 @@ COMBINED_SEARCH_TERMS = [
     "Reader",
     "Research Associate",
     "Research Fellow",
-    "Postdoctoral"
+    "Postdoctoral",
 ]
 
 INDUSTRY_SEARCH_TERMS = [
@@ -41,7 +37,7 @@ INDUSTRY_SEARCH_TERMS = [
     "IT Support Engineer",
     "Audit Associate",
     "Tax Associate",
-    "Software Developer"
+    "Software Developer",
 ]
 
 AI_TERMS = [
@@ -54,7 +50,6 @@ AI_TERMS = [
     "natural language processing",
     "nlp",
     "computer vision",
-
     # Generative AI
     "generative ai",
     "gen ai",
@@ -62,7 +57,6 @@ AI_TERMS = [
     "large language model",
     "llm",
     "foundation model",
-
     # Specific tools / companies
     "chatgpt",
     "gpt-4",
@@ -72,7 +66,6 @@ AI_TERMS = [
     "openai",
     "anthropic",
     "github copilot",
-
     # AI in education / policy framing
     "ai literacy",
     "ai fluency",
@@ -87,19 +80,13 @@ AI_TERMS = [
     "ai governance",
     "responsible ai",
     "prompt engineering",
-
     # Data / adjacent
     "prescriptive analysis",
-    "prescriptive analytics"
-    "predictive model",
-
+    "prescriptive analyticspredictive model",
     "ai",
 ]
 
-LOCATIONS = {
-    "GB": "United Kingdom",
-    "IE": "Ireland"
-}
+LOCATIONS = {"GB": "United Kingdom", "IE": "Ireland"}
 
 # =================================================================================
 # HEADERS TO PASS FOR REQUEST
@@ -143,20 +130,44 @@ RATES_TO_EUR = {
 CURRENCY_PATTERNS = [
     (r"NZ\$", "NZD"),
     (r"AU\$", "AUD"),
-    (r"A\$",  "AUD"),
+    (r"A\$", "AUD"),
     (r"CA\$", "CAD"),
-    (r"£",    "GBP"),
-    (r"€",    "EUR"),
-    (r"¥",    "CNY"),
-    (r"\$",   "USD"),
+    (r"£", "GBP"),
+    (r"€", "EUR"),
+    (r"¥", "CNY"),
+    (r"\$", "USD"),
 ]
 
 REQUEST_DELAY = 1.5
 
 valid_menu_options = [
-    "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
-    "12", "123", "126", "24", "246", "26", "46",
-    "1236", "1246",
-    "89", "893", "8934", "86", "896", "8936", "89346",
-    "96", "936", "9346"
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "0",
+    "12",
+    "123",
+    "126",
+    "24",
+    "246",
+    "26",
+    "46",
+    "1236",
+    "1246",
+    "89",
+    "893",
+    "8934",
+    "86",
+    "896",
+    "8936",
+    "89346",
+    "96",
+    "936",
+    "9346",
 ]

@@ -22,6 +22,7 @@ def get_jobs_from_file():
         jobs = json.load(json_file)
     return jobs
 
+
 def deduplicate(JOBS):
     print("IN DEDUPLICATE...")
     print("JOBS INPUTTED: " + str(len(JOBS)))
@@ -39,6 +40,7 @@ def deduplicate(JOBS):
     print("Unique jobs after deduplication: " + str(len(JOBS)))
     fh.write_file("jobs_linkedin", JOBS)
     print("Saved " + str(len(JOBS)) + " jobs...")
+
 
 def extract_salary():
     global INPUT_FILE

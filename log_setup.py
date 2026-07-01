@@ -17,7 +17,7 @@ def setup_logger():
     formatter = logging.Formatter("%(message)s")
     
 
-    fh = logging.FileHandler(filepath)
+    fh = logging.FileHandler(filepath, encoding="utf-8")
     fh.setFormatter(formatter)
     logger.addHandler(fh)
 

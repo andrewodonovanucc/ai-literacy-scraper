@@ -15,63 +15,91 @@ JOBS_FROM_JSON = []
 
 def get_jobs_from_file():
     global JOBS_FROM_JSON, INPUT_FILE, INPUT_PATH
-    INPUT_FILE = fh.get_most_recent_item("filters")
-    INPUT_PATH = os.path.join("data", "filters", INPUT_FILE)
+    INPUT_FILE = fh.get_most_recent_item("combined_criteria")
+    INPUT_PATH = os.path.join("data", "combined_criteria", INPUT_FILE)
     with open(INPUT_PATH, encoding="utf-8") as json_file:
-        JOBS_FROM_JSON = json.load(json_file)
-    # Normalise stored "N/A" discipline strings to None
+        combined_jobs = json.load(json_file)
+
+    linkedin_jobs = []
+    try:
+        linkedin_file = fh.get_most_recent_item("criteria_linkedin")
+    except Exception:
+        linkedin_file = None
+
+    if linkedin_file:
+        linkedin_path = os.path.join("data", "criteria_linkedin", linkedin_file)
+        with open(linkedin_path, encoding="utf-8") as f:
+            linkedin_jobs = json.load(f)
+
+    JOBS_FROM_JSON = combined_jobs + linkedin_jobs
+
     for job in JOBS_FROM_JSON:
         if job.get("discipline") == "N/A":
             job["discipline"] = None
-    return JOBS_FROM_JSON
+        if "is_phd" not in job:
+            job["is_phd"] = False
+        if job.get("is_closed") in (None, "N/A"):
+            job["is_closed"] = False
+        if "institution" not in job:
+            job["institution"] = job.get("organisation", "")
 
+    return JOBS_FROM_JSON
 
 # =======================================================================================
 #   MENU TO SELECT SEARCH TERMS
 # =======================================================================================
-def menu():    
+def menu():
     logging.info("=" * 100)
     logging.info("  SELECT AN OPTION TO ANALYSE:   ")
     logging.info("=" * 100)
-    logging.info("  1. JUST ACADEMIC JOBS")
-    logging.info("  2. JUST PHD STUDENTSHIPS")
-    logging.info("  3. BOTH")
+    logging.info("  1. JUST ACADEMIC JOBS (jobs.ac.uk)")
+    logging.info("  2. JUST PHD STUDENTSHIPS (jobs.ac.uk)")
+    logging.info("  3. LINKEDIN JOBS")
+    logging.info("  4. ALL")
     logging.info("=" * 100)
     chosen_opt = input("Input Choice: ")
     logging.info("=" * 100)
     return chosen_opt
 
 # =======================================================================================
-#   SELECT POSTING TYPE (JOB OR PHD STUDENTSHIP OR BOTH)
+#   SELECT POSTING TYPE
 # =======================================================================================
 
 def select_posting_type(data, opt=None):
     if opt is None:
         opt = menu()
-        while opt not in ("1", "2", "3"):
+        while opt not in ("1", "2", "3", "4"):
             logging.info("PLEASE SELECT A VALID OPTION")
             opt = menu()
 
     logging.info("SELECTED OPTION: " + opt)
     if opt == "1":
-        logging.info("SELECTED TO ANALYSE JOBS")
-        return [job for job in data if not job.get("is_phd")]
+        logging.info("SELECTED TO ANALYSE ACADEMIC JOBS")
+        return [job for job in data if job.get("source") == "jobs.ac.uk" and not job.get("is_phd")]
     elif opt == "2":
         logging.info("SELECTED TO ANALYSE PHD STUDENTSHIPS")
-        return [job for job in data if job.get("is_phd")]
+        return [job for job in data if job.get("source") == "jobs.ac.uk" and job.get("is_phd")]
+    elif opt == "3":
+        logging.info("SELECTED TO ANALYSE LINKEDIN JOBS")
+        return [job for job in data if job.get("source") == "linkedin"]
     else:
-        logging.info("SELECTED TO ANALYSE BOTH")
+        logging.info("SELECTED TO ANALYSE ALL")
         return data
-    
+
+
 # =================================================================================
 # SORT / ANALYSE FUNCTIONS
 # =================================================================================
 
 def sort_by_ai_matches(data, descending=True):
-    return sorted(data, key=lambda job: job["ai_matches"], reverse=descending)
+    return sorted(data, key=lambda job: job.get("ai_matches", 0), reverse=descending)
 
 def sort_by_salary(data, descending=True):
-    return sorted(data, key=lambda job: (job["salary_lower"] if job["salary_lower"] is not None else float('-inf')), reverse=descending)
+    return sorted(
+        data,
+        key=lambda job: (job["salary_lower"] if job.get("salary_lower") is not None else float("-inf")),
+        reverse=descending,
+    )
 
 def salary_by_discipline(data):
     discipline_salaries = {}
@@ -79,9 +107,7 @@ def salary_by_discipline(data):
     for job in data:
         disc = job.get("discipline") or "N/A"
         sal = job.get("salary_lower")
-        is_phd = job.get("is_phd")
 
-        # Disregard entries where salary is None
         if sal is None:
             continue
         if disc == "N/A":
@@ -125,14 +151,13 @@ def ai_matches_by_discipline(data):
 def output_salary(jobs):
     sorted_jobs = sort_by_salary(jobs)
     for job in sorted_jobs:
-        if job['salary_lower'] is not None and job['salary_lower'] > 10000:
+        if job.get("salary_lower") is not None and job["salary_lower"] > 10000:
             logging.info(f"{job['salary_lower']:>10} EUR | {job['title']}")
-
 
 def output_ai_match(jobs):
     sorted_jobs = sort_by_ai_matches(jobs)
     for job in sorted_jobs:
-        if job['ai_matches'] > 2:
+        if job.get("ai_matches", 0) > 2:
             logging.info(f"{job['ai_matches']:>3} matches | {job['title']}")
 
 def init(analyse_type=None):
@@ -146,7 +171,7 @@ def init(analyse_type=None):
     logging.info(f"{'Discipline':<45} {'N':>5} {'Mean':>10} {'Median':>10} {'Mode':>10}")
     logging.info("-" * 85)
     for disc, stats in discipline_stats.items():
-        if stats['n'] > 3:
+        if stats["n"] > 3:
             logging.info(
                 f"{disc:<45} {stats['n']:>5} {stats['mean']:>10,} {stats['median']:>10,} {str(stats['mode']):>10}"
             )
@@ -158,7 +183,7 @@ def init(analyse_type=None):
     logging.info(f"{'Discipline':<45} {'N':>5} {'Total':>7} {'Avg':>7} {'w/ AI':>7} {'%':>7}")
     logging.info("-" * 85)
     for disc, stats in ai_stats.items():
-        if stats['n'] > 3:
+        if stats["n"] > 3:
             logging.info(
                 f"{disc:<45} {stats['n']:>5} {stats['total_matches']:>7} "
                 f"{stats['avg_matches']:>7.2f} {stats['roles_with_ai']:>7} {stats['pct_with_ai']:>6.1f}%"

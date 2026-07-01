@@ -13,26 +13,42 @@ AI_PATTERNS = []
 MATCHED = []
 UNMATCHED = []
 AI_MATCHES = {}
-SENTENCES_WITH_AI = []
+
+ALL_JOBS = []
+
+
+def load_combined_and_linkedin():
+    combined_filename = fh.get_most_recent_item("combined_criteria")
+    combined_filepath = os.path.join("data", "combined_criteria", combined_filename)
+    with open(combined_filepath, encoding="utf-8") as f:
+        combined_data = json.load(f)
+
+    linkedin_data = []
+    try:
+        linkedin_filename = fh.get_most_recent_item("criteria_linkedin")
+    except Exception:
+        linkedin_filename = None
+
+    if linkedin_filename:
+        linkedin_filepath = os.path.join("data", "criteria_linkedin", linkedin_filename)
+        with open(linkedin_filepath, encoding="utf-8") as f:
+            linkedin_data = json.load(f)
+
+    return combined_data + linkedin_data
+
 
 # =================================================================================
-#   READ JOB DESCRIPTIONS
+#   READ JOB DESCRIPTIONS FROM COMBINED CRITERIA ONLY
 # =================================================================================
-
 
 def read_job_descs():
-    filename = fh.get_most_recent_item("jd")
-    filepath = os.path.join("data", "jd", filename)
-    with open(filepath, encoding="utf-8") as f:
-        data = json.load(f)
+    global ALL_JOBS
+    ALL_JOBS = load_combined_and_linkedin()
 
-    for jd in data:
-        jd_lower = str(jd["jd_text"])
-        jd_lower = jd_lower.lower()
-
-        JOB_DESCRIPTIONS_LOWER.append(jd_lower)
-        JOB_DESCRIPTIONS.append(jd["jd_text"])
-
+    for jd in ALL_JOBS:
+        text = str(jd.get("jd_text") or "")
+        JOB_DESCRIPTIONS.append(text)
+        JOB_DESCRIPTIONS_LOWER.append(text.lower())
 
 # =================================================================================
 #   MAKE THE REGEX PATTERN
@@ -43,6 +59,7 @@ def make_regex():
         pattern = re.compile(r"\b" + re.escape(term) + r"\b", re.IGNORECASE)
         AI_PATTERNS.append((term, pattern))
 
+
 # =================================================================================
 #   CHECK JOB DESCRIPTION FOR AI TERMS
 # =================================================================================
@@ -50,7 +67,6 @@ def make_regex():
 
 def check_jd_for_ai_terms(text):
     found = []
-
     sentences = re.split(r"(?<=[.!?])\s+", text)
 
     for term, pattern in AI_PATTERNS:
@@ -61,18 +77,17 @@ def check_jd_for_ai_terms(text):
 
 
 def scan_all_jds():
-    total = len(JOB_DESCRIPTIONS)
+    total = len(JOB_DESCRIPTIONS_LOWER)
 
     with Progress() as progress:
         task = progress.add_task("Performing AI Search...", total=total)
         for i, text in enumerate(JOB_DESCRIPTIONS_LOWER):
             found = check_jd_for_ai_terms(text)
-            AI_MATCHES[i] = {"sentences": text, "matches": found}
+            AI_MATCHES[i] = {"matches": found}
             if found:
-                MATCHED.append({"index": i, "sentences": text, "matches": found})
+                MATCHED.append(i)
             else:
-                UNMATCHED.append({"index": i, "text": text})
-
+                UNMATCHED.append(i)
             progress.update(task, advance=1)
 
 
@@ -81,19 +96,15 @@ def export_with_ai_matches():
     logging.info("UNMATCHED: " + str(len(UNMATCHED)))
     logging.info("=" * 100)
     logging.info("EXPORT...")
-    file = fh.get_most_recent_item("criteria")
-    filepath = os.path.join("data", "criteria", file)
 
-    with open(filepath, encoding="utf-8") as f:
-        jobs = json.load(f)
+    for i, job in enumerate(ALL_JOBS):
+        match_data = AI_MATCHES.get(i, {})
+        matches = match_data.get("matches", [])
+        job["ai_matches"] = len(matches)
+        job["ai_sentences"] = [m["sentence"] for m in matches]
 
-    for i, job in enumerate(jobs):
-        match_data = AI_MATCHES.get(i)
-        job["ai_matches"] = len(match_data["matches"]) if match_data else 0
-        job["ai_sentences"] = [match["sentence"] for match in match_data["matches"]] if match_data else []
-
-    fh.write_file("filters", jobs)
-    logging.info(f"Exported to filters")
+    fh.write_file("filters", ALL_JOBS)
+    logging.info("Exported to filters")
 
 
 def init():
@@ -101,5 +112,4 @@ def init():
     make_regex()
     logging.info("JOB DESCRIPTIONS READ....")
     scan_all_jds()
-
     export_with_ai_matches()

@@ -21,6 +21,8 @@ import helper as hp
 BASE_URL = "https://www.jobs.ac.uk"
 BASE_SEARCH_URL = BASE_URL + "/search/?keywords="
 
+INDEED_URL = "https://www.jobs.ie/jobs"
+
 PAGE_SIZE = 25
 URLS = []
 

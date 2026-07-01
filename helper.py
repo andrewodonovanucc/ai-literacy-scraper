@@ -16,6 +16,7 @@ def request_page(session, url, label=""):
             logging.warning(f"Non-200 response ({r.status_code}) for {label or url}")
             r.close()
             return None
+        # logging.info("REQUEST WORKED")
         return r
     except requests.exceptions.Timeout:
         logging.warning(f"Timeout fetching {label or url}")

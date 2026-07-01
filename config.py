@@ -31,6 +31,19 @@ COMBINED_SEARCH_TERMS = [
     "Postdoctoral"
 ]
 
+INDUSTRY_SEARCH_TERMS = [
+    "Business Analyst",
+    "ERP Consultant",
+    "Data Analyst",
+    "Project Coordinator",
+    "IT Risk Analyst",
+    "Technical Support Engineer",
+    "IT Support Engineer",
+    "Audit Associate",
+    "Tax Associate",
+    "Software Developer"
+]
+
 AI_TERMS = [
     # General AI
     "artificial intelligence",
@@ -91,11 +104,24 @@ LOCATIONS = {
 # =================================================================================
 # HEADERS TO PASS FOR REQUEST
 # =================================================================================
+
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-GB,en;q=0.9",
     "Referer": "https://www.jobs.ac.uk/",
+}
+
+# =================================================================================
+# HEADERS TO PASS FOR REQUEST
+# =================================================================================
+
+CP_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Gecko/20100101 Firefox/152.0",
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-GB,en;q=0.9",
+    "Referer": "https://careersportal.ie/",
+    "Origin": "https://careersportal.ie",
 }
 
 # =================================================================================
@@ -127,4 +153,10 @@ CURRENCY_PATTERNS = [
 
 REQUEST_DELAY = 1.5
 
-valid_menu_options = ("1", "2", "3", "4", "5", "6", "7", "8", "12", "123", "126", "26", "1236", "24", "246", "46", "1246")
+valid_menu_options = [
+    "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+    "12", "123", "126", "24", "246", "26", "46",
+    "1236", "1246",
+    "89", "893", "8934", "86", "896", "8936", "89346",
+    "96", "936", "9346"
+]
